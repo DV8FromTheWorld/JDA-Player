@@ -1,0 +1,42 @@
+group 'net.dv8tion'
+
+def versionObj = new Version(major: 0, minor: 1, revision: 0)
+group = "net.dv8tion"
+version = "${versionObj.toString()}"
+
+apply plugin: 'java'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    compile 'net.dv8tion:JDA:1.3.0_202'
+}
+
+class Version {
+    int major, minor, revision
+
+    String getMajor() {
+        "${major}"
+    }
+
+    String getMinor() {
+        "${minor}"
+    }
+
+    String getRevision() {
+        "${revision}"
+    }
+
+    String getBuild() {
+        System.getenv("BUILD_NUMBER") ? System.getenv("BUILD_NUMBER") : "DEV"
+    }
+
+    String toString() {
+        "${getMajor()}.${getMinor()}.${getRevision()}_${getBuild()}"
+    }
+}
