@@ -19,13 +19,16 @@ public class AudioSource
                     "./youtube-dl",         //youtube-dl program file
                     "-q",                   //quiet. No standard out.
                     "-f", "bestaudio/best", //Format to download. Attempts best audio-only, followed by best video/audio combo
-                    "--no-playlist"         //If the provided link is part of a Playlist, only grabs the video, not playlist too.
+                    "--no-playlist",        //If the provided link is part of a Playlist, only grabs the video, not playlist too.
+                    "-o", "-"               //Output, output to STDout
             ));
     public static final List<String> FFMPEG_LAUNCH_ARGS =
             Collections.unmodifiableList(Arrays.asList(
                     "ffmpeg",       //Program launch
                     "-i", "-",      //Input file, specifies to read from STDin (pipe)
-                    "-f", "mp3"    //Format, type MP3
+                    "-f", "mp3",    //Format, type MP3
+                    "-map", "a",    //Makes sure to only output audio, even if the specified format supports other streams
+                    "-"             //Used to specify STDout as the output location (pipe)
             ));
 
     private final String url;
@@ -52,14 +55,15 @@ public class AudioSource
         List<String> ffmpegLaunchArgs = new ArrayList<>();
         if (ytdlLaunchArgsF == null)
             ytdlLaunchArgs.addAll(YOUTUBE_DL_LAUNCH_ARGS);
+        else
+            ytdlLaunchArgs.addAll(ytdlLaunchArgsF);
+
         if (ffmpegLaunchArgsF == null)
             ffmpegLaunchArgs.addAll(FFMPEG_LAUNCH_ARGS);
+        else
+            ffmpegLaunchArgs.addAll(ytdlLaunchArgsF);
 
-        ytdlLaunchArgs.add("-o");   //Output location...
-        ytdlLaunchArgs.add("-");    //specifies STDout as the output location (pipe)
         ytdlLaunchArgs.add(url);    //specifies the URL to download.
-
-        ffmpegLaunchArgs.add("-");  //Used to specify STDout as the output location (pipe)
 
         return new AudioStream(url,ytdlLaunchArgs, ffmpegLaunchArgs);
     }
