@@ -49,6 +49,11 @@ public class AudioSource
         this.ffmpegLaunchArgsF = ffmpegLaunchArgs;
     }
 
+    public String getUrl()
+    {
+        return url;
+    }
+
     public InputStream asStream()
     {
         List<String> ytdlLaunchArgs = new ArrayList<>();
