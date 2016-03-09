@@ -10,6 +10,7 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.LinkedList;
+import java.util.Random;
 
 /**
  * Created by Austin on 3/8/2016.
@@ -21,43 +22,53 @@ public class MusicPlayer extends Player
     protected AudioSource currentAudioSource = null;
     protected State state = State.STOPPED;
     protected boolean autoContinue = true;
+    protected boolean shuffle = false;
+    protected boolean repeat = false;
 
     protected enum State
     {
         PLAYING, PAUSED, STOPPED;
     }
 
+    public void setRepeat(boolean repeat)
+    {
+        this.repeat = repeat;
+    }
+
+    public boolean isRepeat()
+    {
+        return repeat;
+    }
+
+    public void setShuffle(boolean shuffle)
+    {
+        this.shuffle = shuffle;
+    }
+
+    public boolean isShuffle()
+    {
+        return shuffle;
+    }
+
     public void reload(boolean autoPlay)
     {
-        if (previousAudioSource == null && currentAudioSource == null)
-            throw new IllegalStateException("Cannot restart or reload a player that has never been started!");
-
-        stop0(false);
-        loadFromSource(previousAudioSource);
-
-        if (autoPlay)
-            play();
-        //TODO: fire onReload
+        reload0(autoPlay, true);
     }
 
     public void skipToNext()
     {
-        if (audioQueue.isEmpty())
-        {
-            stop0(true);
-            return;
-        }
-
-        stop0(false);
-        loadFromSource(audioQueue.removeFirst());
-
-        play0(false);
+        playNext(false);
         //TODO: fire onSkip
     }
 
     public LinkedList<AudioSource> getAudioQueue()
     {
         return audioQueue;
+    }
+
+    public AudioSource getPreviousAudioSource()
+    {
+        return previousAudioSource;
     }
 
     // ============ JDA Player interface overrides =============
@@ -84,7 +95,7 @@ public class MusicPlayer extends Player
     @Override
     public void restart()
     {
-        reload(true);
+        reload0(true, true);
     }
 
     @Override
@@ -105,7 +116,17 @@ public class MusicPlayer extends Player
             else
             {
                 if (autoContinue)
-                    skipToNext();
+                {
+                    if(repeat)
+                    {
+                        reload0(true, false);
+                        //TODO: fire onRepeat
+                    }
+                    else
+                    {
+                        playNext(true);
+                    }
+                }
                 else
                     stop0(true);
                 return null;
@@ -193,6 +214,44 @@ public class MusicPlayer extends Player
             currentAudioSource = null;
         }
         //TODO: fire onStop
+    }
+
+    protected void reload0(boolean autoPlay, boolean fireEvent)
+    {
+        if (previousAudioSource == null && currentAudioSource == null)
+            throw new IllegalStateException("Cannot restart or reload a player that has never been started!");
+
+        stop0(false);
+        loadFromSource(previousAudioSource);
+
+        if (autoPlay)
+            play0(false);
+
+        //TODO: fire onReload
+    }
+
+    protected void playNext(boolean fireEvent)
+    {
+        if (audioQueue.isEmpty())
+        {
+            stop0(false);   //Maybe true?
+            //TODO: fire onFinish
+            return;
+        }
+
+        stop0(false);
+        AudioSource source;
+        if (shuffle)
+        {
+            Random rand = new Random();
+            source = audioQueue.remove(rand.nextInt(audioQueue.size()));
+        }
+        else
+            source = audioQueue.removeFirst();
+        loadFromSource(source);
+
+        play0(false);
+        //TODO: fire onNext
     }
 
     protected void loadFromSource(AudioSource source)
