@@ -1,4 +1,4 @@
-package net.dv8tion.jda.player;
+package net.dv8tion.jda.player.source;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;

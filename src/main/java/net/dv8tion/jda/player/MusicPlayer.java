@@ -2,6 +2,8 @@ package net.dv8tion.jda.player;
 
 import net.dv8tion.jda.audio.AudioConnection;
 import net.dv8tion.jda.audio.player.Player;
+import net.dv8tion.jda.player.source.AudioSource;
+import net.dv8tion.jda.player.source.RemoteSource;
 import net.dv8tion.jda.utils.SimpleLog;
 
 import javax.sound.sampled.AudioInputStream;
@@ -64,6 +66,11 @@ public class MusicPlayer extends Player
     public LinkedList<AudioSource> getAudioQueue()
     {
         return audioQueue;
+    }
+
+    public AudioSource getCurrentAudioSource()
+    {
+        return currentAudioSource;
     }
 
     public AudioSource getPreviousAudioSource()
@@ -266,8 +273,8 @@ public class MusicPlayer extends Player
         catch (IOException | UnsupportedAudioFileException e)
         {
             throw new IllegalArgumentException("MusicPlayer: The AudioSource failed to load!\n" +
-                    "-> AudioSource url: " + source.getUrl() + "\n" +
-                    "-> Error: " + e.getMessage());
+                    "-> AudioSource url: " + source.getSource() + "\n" +
+                    "-> Error: " + e.getMessage(), e);
         }
     }
 }

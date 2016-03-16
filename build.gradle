@@ -1,10 +1,13 @@
+apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'signing'
+apply plugin: 'eclipse'
+
 group 'net.dv8tion'
 
 def versionObj = new Version(major: 0, minor: 1, revision: 0)
 group = "net.dv8tion"
 version = "${versionObj.toString()}"
-
-apply plugin: 'java'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -39,4 +42,23 @@ class Version {
     String toString() {
         "${getMajor()}.${getMinor()}.${getRevision()}_${getBuild()}"
     }
+}
+
+//create a single Jar with all dependencies
+task fatJar(type: Jar) {
+
+    manifest {
+        attributes 'Main-Class': 'net.dv8tion.jda.player.Bot'
+
+    }
+    baseName = project.name + '-withDependencies'
+    from { configurations.compile.collect {
+        dependency ->
+            if (dependency.isDirectory()) { //If it is a folder, just include the folder in its entirety
+                return dependency
+            } else {    //If it isn't a folder, put it in a zipTree. if it is a zip or jar the contents will be extracted.
+                return zipTree(dependency)
+            }
+    }}
+    with jar
 }
