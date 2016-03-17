@@ -114,7 +114,9 @@ public class RemoteSource implements AudioSource
             aInfo.thumbnail = !info.optString("thumbnail", "").isEmpty()
                                 ? info.getString("thumbnail")
                                 : null;
-            aInfo.duration = info.optInt("duration", -1);
+            aInfo.duration = info.optInt("duration", -1) != -1
+                                ? AudioTimestamp.fromSeconds(info.getInt("duration"))
+                                : null;
 
             audioInfo = aInfo;
             return aInfo;
@@ -126,7 +128,7 @@ public class RemoteSource implements AudioSource
         return null;
     }
 
-    public InputStream asStream()
+    public AudioStream asStream()
     {
         List<String> ytdlLaunchArgs = new ArrayList<>();
         List<String> ffmpegLaunchArgs = new ArrayList<>();

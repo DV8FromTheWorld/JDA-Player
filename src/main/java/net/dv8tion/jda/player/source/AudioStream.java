@@ -6,12 +6,16 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by Austin on 3/6/2016.
  */
 public class AudioStream extends BufferedInputStream
 {
+    private static Pattern TIME_PATTERN = Pattern.compile("(?<=time=).*?(?= bitrate)");
+
     //Represent the processes that control the Python Youtube-dl and the FFmpeg program.
     private Process ytdlProcess;
     private Process ffmpegProcess;
@@ -24,6 +28,7 @@ public class AudioStream extends BufferedInputStream
     private String url;
     private List<String> ytdlLaunchArgs;
     private List<String> ffmpegLaunchArgs;
+    private AudioTimestamp timestamp = null;
 
     protected AudioStream(String url, List<String> ytdlLaunchArgs, List<String> ffmpegLaunchArgs)
     {
@@ -32,6 +37,11 @@ public class AudioStream extends BufferedInputStream
         this.ytdlLaunchArgs = ytdlLaunchArgs;
         this.ffmpegLaunchArgs = ffmpegLaunchArgs;
         setup();
+    }
+
+    public AudioTimestamp getCurrentTimestamp()
+    {
+        return timestamp;
     }
 
     private void setup()
@@ -115,10 +125,8 @@ public class AudioStream extends BufferedInputStream
 
                         byte[] buffer = new byte[1024];
                         int amountRead = -1;
-                        int i = 0;
                         while (!isInterrupted() && ((amountRead = fromYTDL.read(buffer)) > -1))
                         {
-                            i++;
                             System.out.println("ERR YTDL: " + new String(Arrays.copyOf(buffer, amountRead)));
                         }
                     }
@@ -144,11 +152,17 @@ public class AudioStream extends BufferedInputStream
 
                         byte[] buffer = new byte[1024];
                         int amountRead = -1;
-                        int i = 0;
                         while (!isInterrupted() && ((amountRead = fromFFmpeg.read(buffer)) > -1))
                         {
-                            i++;
-                            System.out.println("ERR FFMPEG: " + new String(Arrays.copyOf(buffer, amountRead)));
+                            String info = new String(Arrays.copyOf(buffer, amountRead));
+                            if (info.contains("time="))
+                            {
+                                Matcher m = TIME_PATTERN.matcher(info);
+                                if (m.find())
+                                {
+                                    timestamp = AudioTimestamp.fromFFmpegTimestamp(m.group());
+                                }
+                            }
                         }
                     }
                     catch (IOException e)

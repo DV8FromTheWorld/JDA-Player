@@ -14,6 +14,6 @@ public interface AudioSource
 {
     String getSource();
     AudioInfo getInfo();
-    InputStream asStream();
+    AudioStream asStream();
     File asFile(String path, boolean deleteOnExists) throws FileAlreadyExistsException, FileNotFoundException;
 }

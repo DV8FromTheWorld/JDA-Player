@@ -3,7 +3,8 @@ package net.dv8tion.jda.player;
 import net.dv8tion.jda.audio.AudioConnection;
 import net.dv8tion.jda.audio.player.Player;
 import net.dv8tion.jda.player.source.AudioSource;
-import net.dv8tion.jda.player.source.RemoteSource;
+import net.dv8tion.jda.player.source.AudioStream;
+import net.dv8tion.jda.player.source.AudioTimestamp;
 import net.dv8tion.jda.utils.SimpleLog;
 
 import javax.sound.sampled.AudioInputStream;
@@ -22,6 +23,7 @@ public class MusicPlayer extends Player
     protected LinkedList<AudioSource> audioQueue = new LinkedList<>();
     protected AudioSource previousAudioSource = null;
     protected AudioSource currentAudioSource = null;
+    protected AudioStream currentAudioStream = null;
     protected State state = State.STOPPED;
     protected boolean autoContinue = true;
     protected boolean shuffle = false;
@@ -76,6 +78,14 @@ public class MusicPlayer extends Player
     public AudioSource getPreviousAudioSource()
     {
         return previousAudioSource;
+    }
+
+    public AudioTimestamp getCurrentTimestamp()
+    {
+        if (currentAudioStream != null)
+            return currentAudioStream.getCurrentTimestamp();
+        else
+            return null;
     }
 
     // ============ JDA Player interface overrides =============
@@ -208,6 +218,7 @@ public class MusicPlayer extends Player
         {
             amplitudeAudioStream.close();
             audioSource.close();
+            //We don't close currentAudioStream because it is handled by audioSource.close()
         }
         catch (IOException e)
         {
@@ -219,6 +230,7 @@ public class MusicPlayer extends Player
             audioSource = null;
             previousAudioSource = currentAudioSource;
             currentAudioSource = null;
+            currentAudioStream = null;
         }
         //TODO: fire onStop
     }
@@ -265,10 +277,11 @@ public class MusicPlayer extends Player
     {
         try
         {
-            InputStream stream = source.asStream();
+            AudioStream stream = source.asStream();
             AudioInputStream aStream = AudioSystem.getAudioInputStream(stream);
             setAudioSource(aStream);
             currentAudioSource = source;
+            currentAudioStream = stream;    //We save the stream to be able to call getCurrentTimestamp()
         }
         catch (IOException | UnsupportedAudioFileException e)
         {

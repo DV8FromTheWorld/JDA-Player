@@ -15,7 +15,7 @@ public class AudioInfo
     protected String description;
     protected String extractor;
     protected String thumbnail;
-    protected int duration;
+    protected AudioTimestamp duration;
 
     public JSONObject getJsonInfo()
     {
@@ -57,7 +57,7 @@ public class AudioInfo
         return thumbnail;
     }
 
-    public int getDuration()
+    public AudioTimestamp getDuration()
     {
         return duration;
     }

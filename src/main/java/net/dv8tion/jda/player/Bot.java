@@ -22,6 +22,7 @@ import net.dv8tion.jda.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.hooks.ListenerAdapter;
 import net.dv8tion.jda.player.source.AudioInfo;
 import net.dv8tion.jda.player.source.AudioSource;
+import net.dv8tion.jda.player.source.AudioTimestamp;
 import net.dv8tion.jda.player.source.RemoteSource;
 import org.json.JSONObject;
 
@@ -115,8 +116,11 @@ public class Bot extends ListenerAdapter
         {
             if (player.isPlaying())
             {
+                AudioTimestamp currentTime = player.getCurrentTimestamp();
                 AudioInfo info = player.getCurrentAudioSource().getInfo();
-                event.getChannel().sendMessage("Currently Playing: " + info.getTitle());
+                event.getChannel().sendMessage(
+                        "**Playing:** " + info.getTitle() + "\n" +
+                        "**Time:**    [" + currentTime.getTimestamp() + " / " + info.getDuration().getTimestamp() + "]");
             }
             else
             {
