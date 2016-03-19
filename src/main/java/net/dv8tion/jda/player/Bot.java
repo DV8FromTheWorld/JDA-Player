@@ -18,6 +18,7 @@ package net.dv8tion.jda.player;
 
 import net.dv8tion.jda.JDA;
 import net.dv8tion.jda.JDABuilder;
+import net.dv8tion.jda.MessageBuilder;
 import net.dv8tion.jda.entities.VoiceChannel;
 import net.dv8tion.jda.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.hooks.ListenerAdapter;
@@ -36,6 +37,7 @@ import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 
 public class Bot extends ListenerAdapter
 {
@@ -89,6 +91,20 @@ public class Bot extends ListenerAdapter
         }
     }
 
+    //Current commands
+    // join [name]  - Joins a voice channel that has the provided name
+    // leave        - Leaves the voice channel that the bot is currently in.
+    // play         - Plays songs from the current queue. Starts playing again if it was previously paused
+    // play [url]   - Adds a new song to the queue and starts playing if it wasn't playing already
+    // pause        - Pauses audio playback
+    // stop         - Completely stops audio playback, skipping the current song.
+    // skip         - Skips the current song, automatically starting the next
+    // nowplaying   - Prints information about the currently playing song (title, current time)
+    // list         - Lists the songs in the queue
+    // restart      - Restarts the current song or restarts the previous song if there is no current song playing.
+    // repeat       - Makes the player repeat the currently playing song
+    // volume [val] - Changes the volume of the player. Valid values are 0.0 to 2.0. 1.0 is 100%
+    // reset        - Completely resets the player, fixing all errors and clearing the queue.
     public void onGuildMessageReceived(GuildMessageReceivedEvent event)
     {
         //If the person who sent the message isn't a known auth'd user, ignore.
@@ -113,6 +129,54 @@ public class Bot extends ListenerAdapter
 
         String message = event.getMessage().getContent();
 
+        if (message.equals("list"))
+        {
+            List<AudioSource> queue = player.getAudioQueue();
+            if (queue.isEmpty())
+            {
+                event.getChannel().sendMessage("The queue is currently empty!");
+                return;
+            }
+
+
+            MessageBuilder builder = new MessageBuilder();
+            builder.appendString("__Current Queue.  Entries: " + queue.size() + "__\n");
+            for (int i = 0; i < queue.size() && i < 10; i++)
+            {
+                AudioInfo info = queue.get(i).getInfo();
+//                builder.appendString("**(" + (i + 1) + ")** ");
+                if (info == null)
+                    builder.appendString("*Could not get info for this song.*");
+                else
+                {
+                    AudioTimestamp duration = info.getDuration();
+                    builder.appendString("`[");
+                    if (duration == null)
+                        builder.appendString("N/A");
+                    else
+                        builder.appendString(duration.getTimestamp());
+                    builder.appendString("]` " + info.getTitle() + "\n");
+                }
+            }
+
+            boolean error = false;
+            int totalSeconds = 0;
+            for (AudioSource source : queue)
+            {
+                AudioInfo info = source.getInfo();
+                if (info == null || info.getDuration() == null)
+                {
+                    error = true;
+                    continue;
+                }
+                totalSeconds += info.getDuration().getTotalSeconds();
+            }
+
+            builder.appendString("\nTotal Queue Time Length: " + AudioTimestamp.fromSeconds(totalSeconds).getTimestamp());
+            if (error)
+                builder.appendString("`An error occured calculating total time. Might not be completely valid.");
+            event.getChannel().sendMessage(builder.build());
+        }
         if (message.equals("nowplaying"))
         {
             if (player.isPlaying())
@@ -126,22 +190,6 @@ public class Bot extends ListenerAdapter
             else
             {
                 event.getChannel().sendMessage("The player is not currently playing anything!");
-            }
-        }
-        if (message.startsWith("file "))
-        {
-            AudioSource source = new RemoteSource(message.substring("file ".length()));
-            try
-            {
-                source.asFile("ouuuuut.mp3", false);
-            }
-            catch (FileAlreadyExistsException e)
-            {
-                e.printStackTrace();
-            }
-            catch (FileNotFoundException e)
-            {
-                e.printStackTrace();
             }
         }
         if (message.startsWith("eval "))
@@ -276,6 +324,7 @@ public class Bot extends ListenerAdapter
                 String msg = "";
                 String url = message.substring("play ".length());
                 AudioSource source = new RemoteSource(url);
+                source.getInfo();   //Preload the audio info.
                 player.getAudioQueue().add(source);
                 msg += "The provided URL has been added the to queue";
                 if (player.isStopped())
