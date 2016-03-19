@@ -64,6 +64,11 @@ public class AudioTimestamp
         return milliseconds;
     }
 
+    public int getTotalSeconds()
+    {
+        return (hours * 3600) + (minutes * 60) + seconds;
+    }
+
     @Override
     public String toString()
     {
