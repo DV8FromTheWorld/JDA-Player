@@ -32,9 +32,7 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import javax.security.auth.login.LoginException;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
@@ -42,12 +40,10 @@ import java.util.List;
 public class Bot extends ListenerAdapter
 {
     private MusicPlayer player = null;
-    private float volume = 0.35f;
 
     public Bot()
     {
         player = new MusicPlayer();
-        player.setVolume(volume);
     }
 
     public static void main(String[] args)
@@ -60,6 +56,7 @@ public class Bot extends ListenerAdapter
                     .setPassword(obj.getString("password"))
                     .addListener(new Bot())
                     .buildBlocking();
+
         }
         catch (IllegalArgumentException e)
         {
@@ -215,14 +212,6 @@ public class Bot extends ListenerAdapter
             }
 
         }
-        if (message.startsWith("volume "))
-        {
-            volume = Float.parseFloat(message.substring("volume ".length()));
-            if (volume > 1.5f || volume < 0.0f)
-                volume = 1.0f;
-            player.setVolume(volume);
-            event.getChannel().sendMessage("Volume was changed to: " + volume);
-        }
 
         //Start an audio connection with a VoiceChannel
         if (message.startsWith("join "))
@@ -283,7 +272,6 @@ public class Bot extends ListenerAdapter
         {
             player.stop();
             player = new MusicPlayer();
-            player.setVolume(volume);
             event.getJDA().getAudioManager().setSendingHandler(player);
             event.getChannel().sendMessage("Music player has been completely reset.");
         }
@@ -351,7 +339,7 @@ public class Bot extends ListenerAdapter
             {
                 if (player.getPreviousAudioSource() != null)
                 {
-                    player.restart();
+                    player.reload(true);
                     event.getChannel().sendMessage("The previous song has been restarted.");
                 }
                 else
@@ -361,7 +349,7 @@ public class Bot extends ListenerAdapter
             }
             else
             {
-                player.restart();
+                player.reload(true);
                 event.getChannel().sendMessage("The currently playing song has been restarted!");
             }
         }

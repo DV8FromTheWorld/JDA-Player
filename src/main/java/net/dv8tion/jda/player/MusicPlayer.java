@@ -17,25 +17,19 @@
 package net.dv8tion.jda.player;
 
 import net.dv8tion.jda.audio.AudioConnection;
-import net.dv8tion.jda.audio.player.Player;
+import net.dv8tion.jda.audio.AudioSendHandler;
 import net.dv8tion.jda.player.source.AudioSource;
 import net.dv8tion.jda.player.source.AudioStream;
 import net.dv8tion.jda.player.source.AudioTimestamp;
 import net.dv8tion.jda.utils.SimpleLog;
 
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.LinkedList;
 import java.util.Random;
 
-/**
- * Created by Austin on 3/8/2016.
- */
-public class MusicPlayer extends Player
+public class MusicPlayer implements AudioSendHandler
 {
+    public static final int PCM_FRAME_SIZE = 4;
     protected LinkedList<AudioSource> audioQueue = new LinkedList<>();
     protected AudioSource previousAudioSource = null;
     protected AudioSource currentAudioSource = null;
@@ -106,13 +100,11 @@ public class MusicPlayer extends Player
 
     // ============ JDA Player interface overrides =============
 
-    @Override
     public void play()
     {
         play0(true);
     }
 
-    @Override
     public void pause()
     {
         if (state == State.PAUSED)
@@ -126,22 +118,22 @@ public class MusicPlayer extends Player
     }
 
     @Override
-    public void restart()
+    public boolean canProvide()
     {
-        reload0(true, true);
+        return state.equals(State.PLAYING);
     }
 
     @Override
     public byte[] provide20MsAudio()
     {
-        if (audioSource == null || audioFormat == null)
-            throw new IllegalStateException("The Audio source was never set for this player!\n" +
-                    "Please provide an AudioInputStream using setAudioSource.");
+//        if (currentAudioStream == null || audioFormat == null)
+//            throw new IllegalStateException("The Audio source was never set for this player!\n" +
+//                    "Please provide an AudioInputStream using setAudioSource.");
         try
         {
             int amountRead;
-            byte[] audio = new byte[AudioConnection.OPUS_FRAME_SIZE * audioFormat.getFrameSize()];
-            amountRead = audioSource.read(audio, 0, audio.length);
+            byte[] audio = new byte[AudioConnection.OPUS_FRAME_SIZE * PCM_FRAME_SIZE];
+            amountRead = currentAudioStream.read(audio, 0, audio.length);
             if (amountRead > -1)
             {
                 return audio;
@@ -167,39 +159,29 @@ public class MusicPlayer extends Player
         }
         catch (IOException e)
         {
-            SimpleLog.getLog("JDAPlayer").log(e);
+            SimpleLog.getLog("JDA-Player").log(e);
         }
         return null;
     }
 
-    @Override
     public void stop()
     {
         stop0(true);
     }
 
-    @Override
     public boolean isPlaying()
     {
         return state == State.PLAYING;
     }
 
-    @Override
     public boolean isPaused()
     {
         return state == State.PAUSED;
     }
 
-    @Override
     public boolean isStopped()
     {
         return state == State.STOPPED;
-    }
-
-    @Override
-    public boolean isStarted()
-    {
-        throw new UnsupportedOperationException("MusicPlayer doesn't support this");
     }
 
     // ========= Internal Functions ==========
@@ -232,9 +214,7 @@ public class MusicPlayer extends Player
         state = State.STOPPED;
         try
         {
-            amplitudeAudioStream.close();
-            audioSource.close();
-            //We don't close currentAudioStream because it is handled by audioSource.close()
+            currentAudioStream.close();
         }
         catch (IOException e)
         {
@@ -242,8 +222,6 @@ public class MusicPlayer extends Player
         }
         finally
         {
-            amplitudeAudioStream = null;
-            audioSource = null;
             previousAudioSource = currentAudioSource;
             currentAudioSource = null;
             currentAudioStream = null;
@@ -291,19 +269,8 @@ public class MusicPlayer extends Player
 
     protected void loadFromSource(AudioSource source)
     {
-        try
-        {
-            AudioStream stream = source.asStream();
-            AudioInputStream aStream = AudioSystem.getAudioInputStream(stream);
-            setAudioSource(aStream);
-            currentAudioSource = source;
-            currentAudioStream = stream;    //We save the stream to be able to call getCurrentTimestamp()
-        }
-        catch (IOException | UnsupportedAudioFileException e)
-        {
-            throw new IllegalArgumentException("MusicPlayer: The AudioSource failed to load!\n" +
-                    "-> AudioSource url: " + source.getSource() + "\n" +
-                    "-> Error: " + e.getMessage(), e);
-        }
+        AudioStream stream = source.asStream();
+        currentAudioSource = source;
+        currentAudioStream = stream;
     }
 }

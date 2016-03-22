@@ -38,7 +38,7 @@ public class RemoteSource implements AudioSource
             Collections.unmodifiableList(Arrays.asList(
                     "ffmpeg",       //Program launch
                     "-i", "-",      //Input file, specifies to read from STDin (pipe)
-                    "-f", "mp3",    //Format, type MP3
+                    "-f", "s16be",  //Format.  PCM, signed, 16bit, Big Endian
                     "-map", "a",    //Makes sure to only output audio, even if the specified format supports other streams
                     "-"             //Used to specify STDout as the output location (pipe)
             ));
