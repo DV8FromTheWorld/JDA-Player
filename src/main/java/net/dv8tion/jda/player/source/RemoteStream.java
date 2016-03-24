@@ -27,8 +27,6 @@ import java.util.regex.Pattern;
 
 public class RemoteStream extends AudioStream
 {
-    private static Pattern TIME_PATTERN = Pattern.compile("(?<=time=).*?(?= bitrate)");
-
     //Represent the processes that control the Python Youtube-dl and the FFmpeg program.
     private Process ytdlProcess;
     private Process ffmpegProcess;
@@ -38,26 +36,11 @@ public class RemoteStream extends AudioStream
     private Thread ytdlErrGobler;
     private Thread ffmpegErrGobler;
 
-    private String url;
     private List<String> ytdlLaunchArgs;
     private List<String> ffmpegLaunchArgs;
     private AudioTimestamp timestamp = null;
 
-    protected RemoteStream(String url, List<String> ytdlLaunchArgs, List<String> ffmpegLaunchArgs)
-    {
-        super();
-        this.url = url;
-        this.ytdlLaunchArgs = ytdlLaunchArgs;
-        this.ffmpegLaunchArgs = ffmpegLaunchArgs;
-        setup();
-    }
-
-    public AudioTimestamp getCurrentTimestamp()
-    {
-        return timestamp;
-    }
-
-    private void setup()
+    protected RemoteStream(List<String> ytdlLaunchArgs, List<String> ffmpegLaunchArgs)
     {
         try
         {
@@ -202,6 +185,12 @@ public class RemoteStream extends AudioStream
                 e1.printStackTrace();
             }
         }
+    }
+
+    @Override
+    public AudioTimestamp getCurrentTimestamp()
+    {
+        return timestamp;
     }
 
     @Override

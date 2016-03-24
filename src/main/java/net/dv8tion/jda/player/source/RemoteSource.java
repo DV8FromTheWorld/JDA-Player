@@ -161,7 +161,7 @@ public class RemoteSource implements AudioSource
 
         ytdlLaunchArgs.add(url);    //specifies the URL to download.
 
-        return new RemoteStream(url,ytdlLaunchArgs, ffmpegLaunchArgs);
+        return new RemoteStream(ytdlLaunchArgs, ffmpegLaunchArgs);
     }
 
     @Override
