@@ -140,6 +140,7 @@ public class RemoteSource implements AudioSource
         return null;
     }
 
+    @Override
     public AudioStream asStream()
     {
         List<String> ytdlLaunchArgs = new ArrayList<>();
@@ -160,9 +161,10 @@ public class RemoteSource implements AudioSource
 
         ytdlLaunchArgs.add(url);    //specifies the URL to download.
 
-        return new AudioStream(url,ytdlLaunchArgs, ffmpegLaunchArgs);
+        return new RemoteStream(url,ytdlLaunchArgs, ffmpegLaunchArgs);
     }
 
+    @Override
     public File asFile(String path, boolean deleteIfExists) throws FileAlreadyExistsException, FileNotFoundException
     {
         if (path == null || path.isEmpty())
