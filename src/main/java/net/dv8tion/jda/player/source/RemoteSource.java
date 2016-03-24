@@ -39,6 +39,8 @@ public class RemoteSource implements AudioSource
                     "ffmpeg",       //Program launch
                     "-i", "-",      //Input file, specifies to read from STDin (pipe)
                     "-f", "s16be",  //Format.  PCM, signed, 16bit, Big Endian
+                    "-ac", "2",     //Channels. Specify 2 for stereo audio.
+                    "-ar", "48000", //Rate. Opus requires an audio rate of 48000hz
                     "-map", "a",    //Makes sure to only output audio, even if the specified format supports other streams
                     "-"             //Used to specify STDout as the output location (pipe)
             ));
