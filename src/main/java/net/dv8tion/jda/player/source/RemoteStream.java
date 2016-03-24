@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class RemoteStream extends BufferedInputStream
+public class RemoteStream extends AudioStream
 {
     private static Pattern TIME_PATTERN = Pattern.compile("(?<=time=).*?(?= bitrate)");
 
@@ -45,7 +45,7 @@ public class RemoteStream extends BufferedInputStream
 
     protected RemoteStream(String url, List<String> ytdlLaunchArgs, List<String> ffmpegLaunchArgs)
     {
-        super(null);
+        super();
         this.url = url;
         this.ytdlLaunchArgs = ytdlLaunchArgs;
         this.ffmpegLaunchArgs = ffmpegLaunchArgs;

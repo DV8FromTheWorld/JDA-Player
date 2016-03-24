@@ -13,17 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package net.dv8tion.jda.player.source;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.nio.file.FileAlreadyExistsException;
+import java.io.BufferedInputStream;
 
-public interface AudioSource
+public abstract class AudioStream extends BufferedInputStream
 {
-    String getSource();
-    AudioInfo getInfo();
-    AudioStream asStream();
-    File asFile(String path, boolean deleteOnExists) throws FileAlreadyExistsException, FileNotFoundException;
+    public AudioStream()
+    {
+        super(null);
+    }
+
+    public abstract AudioTimestamp getCurrentTimestamp();
 }
