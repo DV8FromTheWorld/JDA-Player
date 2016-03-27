@@ -16,6 +16,10 @@
 
 package net.dv8tion.jda.player.source;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+import sun.misc.IOUtils;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -36,8 +40,16 @@ public class LocalSource implements AudioSource
                 "-map", "a",    //Makes sure to only output audio, even if the specified format supports other streams
                 "-"             //Used to specify STDout as the output location (pipe)
         ));
+    public static final List<String> FFPROBE_INFO_ARGS =
+            Collections.unmodifiableList(Arrays.asList(
+                    "ffprobe",
+                    "-show_format",
+                    "-print_format", "json",
+                    "-loglevel", "0"
+            ));
 
     private File file;
+    private AudioInfo audioInfo;
 
     public LocalSource(File file)
     {
@@ -70,7 +82,65 @@ public class LocalSource implements AudioSource
     @Override
     public AudioInfo getInfo()
     {
-        return null;
+        if (audioInfo != null)
+            return audioInfo;
+
+        audioInfo = new AudioInfo();
+        try
+        {
+            List<String> infoArgs = new LinkedList<>();
+            infoArgs.addAll(FFPROBE_INFO_ARGS);
+            infoArgs.add("-i");
+            infoArgs.add(file.getCanonicalPath());
+
+            Process infoProcess = new ProcessBuilder().command(infoArgs).start();
+            byte[] infoData = IOUtils.readFully(infoProcess.getInputStream(), -1, false);
+            if (infoData == null || infoData.length == 0)
+                throw new NullPointerException("The FFprobe process resulted in a null or zero-length INFO!");
+
+            System.out.println(new String(infoData));
+
+            JSONObject info = new JSONObject(new String(infoData));
+            JSONObject format = info.getJSONObject("format");
+            JSONObject tags = info.optJSONObject("tags");
+
+            audioInfo.jsonInfo = info;
+            audioInfo.origin = file.getCanonicalPath();
+            audioInfo.extractor = "LocalSource";
+
+            if (tags != null)
+            {
+                audioInfo.title = !tags.optString("title", "").isEmpty()
+                        ? tags.getString("title")
+                        : null;
+
+                audioInfo.description =
+                    "Title: " + (tags.has("title") ? tags.getString("title") : "N/A") + "\n" +
+                    "Artist: " + (tags.has("artist") ? tags.getString("artist") : "N/A") + "\n" +
+                    "Album: " + (tags.has("album") ? tags.getString("album") : "N/A") + "\n" +
+                    "Genre: " + (tags.has("genre") ? tags.getString("genre") : "N/A") + "\n";
+            }
+            audioInfo.encoding = !format.optString("format_name", "").isEmpty()
+                    ? format.getString("format_name")
+                    : !format.optString("format_long_name", "").isEmpty()
+                    ? format.getString("format_long_name")
+                    : null;
+            audioInfo.duration = format.has("duration")
+                    ? AudioTimestamp.fromSeconds((int) format.getDouble("duration"))
+                    : null;
+
+        }
+        catch (IOException e)
+        {
+            audioInfo.error = e.getMessage();
+            e.printStackTrace();
+        }
+        catch (JSONException e)
+        {
+            audioInfo.error = e.getMessage();
+            e.printStackTrace();
+        }
+        return audioInfo;
     }
 
     @Override
@@ -82,14 +152,13 @@ public class LocalSource implements AudioSource
         {
             ffmpegLaunchArgs.add("-i");
             ffmpegLaunchArgs.add(file.getCanonicalPath());
+            return new LocalStream(ffmpegLaunchArgs);
         }
         catch (IOException e)
         {
             e.printStackTrace();
             return null;
         }
-
-        return new LocalStream(ffmpegLaunchArgs);
     }
 
     @Override

@@ -91,7 +91,7 @@ public class RemoteSource implements AudioSource
         infoArgs.add("--skip-download");    //Doesn't actually download the file.
         infoArgs.add(url);                  //specifies the URL to download.
 
-        AudioInfo aInfo = new AudioInfo();
+        audioInfo = new AudioInfo();
         try
         {
             Process infoProcess = new ProcessBuilder().command(infoArgs).start();
@@ -102,58 +102,56 @@ public class RemoteSource implements AudioSource
             String infoString = new String(infoData);
             if (infoString.startsWith("ERROR"))
             {
-                aInfo.error = infoString;
-                audioInfo = aInfo;
+                audioInfo.error = infoString;
             }
             else
             {
                 JSONObject info = new JSONObject(infoString);
 
-                aInfo.jsonInfo = info;
-                aInfo.title = !info.optString("title", "").isEmpty()
+                audioInfo.jsonInfo = info;
+                audioInfo.title = !info.optString("title", "").isEmpty()
                         ? info.getString("title")
                         : !info.optString("fulltitle", "").isEmpty()
                         ? info.getString("fulltitle")
                         : null;
-                aInfo.origin = !info.optString("webpage_url", "").isEmpty()
+                audioInfo.origin = !info.optString("webpage_url", "").isEmpty()
                         ? info.getString("webpage_url")
                         : url;
-                aInfo.id = !info.optString("id", "").isEmpty()
+                audioInfo.id = !info.optString("id", "").isEmpty()
                         ? info.getString("id")
                         : null;
-                aInfo.encoding = !info.optString("acodec", "").isEmpty()
+                audioInfo.encoding = !info.optString("acodec", "").isEmpty()
                         ? info.getString("acodec")
                         : !info.optString("ext", "").isEmpty()
                         ? info.getString("ext")
                         : null;
-                aInfo.description = !info.optString("description", "").isEmpty()
+                audioInfo.description = !info.optString("description", "").isEmpty()
                         ? info.getString("description")
                         : null;
-                aInfo.extractor = !info.optString("extractor", "").isEmpty()
+                audioInfo.extractor = !info.optString("extractor", "").isEmpty()
                         ? info.getString("extractor")
                         : !info.optString("extractor_key").isEmpty()
                         ? info.getString("extractor_key")
                         : null;
-                aInfo.thumbnail = !info.optString("thumbnail", "").isEmpty()
+                audioInfo.thumbnail = !info.optString("thumbnail", "").isEmpty()
                         ? info.getString("thumbnail")
                         : null;
-                aInfo.duration = info.optInt("duration", -1) != -1
+                audioInfo.duration = info.optInt("duration", -1) != -1
                         ? AudioTimestamp.fromSeconds(info.getInt("duration"))
                         : null;
             }
         }
         catch (IOException e)
         {
-            aInfo.error = e.getMessage();
+            audioInfo.error = e.getMessage();
             e.printStackTrace();
         }
         catch (JSONException e)
         {
-            aInfo.error = e.getMessage();
+            audioInfo.error = e.getMessage();
             e.printStackTrace();
         }
-        audioInfo = aInfo;
-        return aInfo;
+        return audioInfo;
     }
 
     @Override
