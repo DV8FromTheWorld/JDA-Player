@@ -28,9 +28,6 @@ import net.dv8tion.jda.player.source.AudioTimestamp;
 import net.dv8tion.jda.player.source.RemoteSource;
 import org.json.JSONObject;
 
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -100,7 +97,6 @@ public class Bot extends ListenerAdapter
     // list         - Lists the songs in the queue
     // restart      - Restarts the current song or restarts the previous song if there is no current song playing.
     // repeat       - Makes the player repeat the currently playing song
-    // volume [val] - Changes the volume of the player. Valid values are 0.0 to 2.0. 1.0 is 100%
     // reset        - Completely resets the player, fixing all errors and clearing the queue.
     public void onGuildMessageReceived(GuildMessageReceivedEvent event)
     {
@@ -180,37 +176,23 @@ public class Bot extends ListenerAdapter
             {
                 AudioTimestamp currentTime = player.getCurrentTimestamp();
                 AudioInfo info = player.getCurrentAudioSource().getInfo();
-                event.getChannel().sendMessage(
-                        "**Playing:** " + info.getTitle() + "\n" +
-                        "**Time:**    [" + currentTime.getTimestamp() + " / " + info.getDuration().getTimestamp() + "]");
+                if (info.getError() == null)
+                {
+                    event.getChannel().sendMessage(
+                            "**Playing:** " + info.getTitle() + "\n" +
+                            "**Time:**    [" + currentTime.getTimestamp() + " / " + info.getDuration().getTimestamp() + "]");
+                }
+                else
+                {
+                    event.getChannel().sendMessage(
+                            "**Playing:** Info Error. Known source: " + player.getCurrentAudioSource().getSource() + "\n" +
+                            "**Time:**    [" + currentTime.getTimestamp() + " / (N/A)]");
+                }
             }
             else
             {
                 event.getChannel().sendMessage("The player is not currently playing anything!");
             }
-        }
-        if (message.startsWith("eval "))
-        {
-            ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
-            try
-            {
-                engine.eval("var imports = new JavaImporter(java.io, java.lang, java.util);");
-                engine.put("event", event);
-                engine.put("channel", event.getChannel());
-                engine.put("api", event.getJDA());
-                Object out = engine.eval(
-                        "(function() {" +
-                                "with (imports) {" +
-                                message.substring("eval ".length()) +
-                                "}" +
-                                "})();");
-                event.getChannel().sendMessage(out == null ? "Executed without error." : out.toString());
-            }
-            catch (ScriptException e)
-            {
-                e.printStackTrace();
-            }
-
         }
 
         //Start an audio connection with a VoiceChannel
@@ -312,15 +294,24 @@ public class Bot extends ListenerAdapter
                 String msg = "";
                 String url = message.substring("play ".length());
                 AudioSource source = new RemoteSource(url);
-                source.getInfo();   //Preload the audio info.
-                player.getAudioQueue().add(source);
-                msg += "The provided URL has been added the to queue";
-                if (player.isStopped())
+//                AudioSource source = new LocalSource(new File(url));
+                AudioInfo info = source.getInfo();   //Preload the audio info.
+                if (info == null)
                 {
-                    player.play();
-                    msg += " and the player has started playing";
+                    player.getAudioQueue().add(source);
+                    msg += "The provided URL has been added the to queue";
+                    if (player.isStopped())
+                    {
+                        player.play();
+                        msg += " and the player has started playing";
+                    }
+                    event.getChannel().sendMessage(msg + ".");
                 }
-                event.getChannel().sendMessage(msg + ".");
+                else
+                {
+                    event.getChannel().sendMessage("There was an error while loading the provided URL.\n" +
+                            "Error: " + info.getError());
+                }
             }
         }
         if (message.equals("pause"))
