@@ -296,7 +296,7 @@ public class Bot extends ListenerAdapter
                 AudioSource source = new RemoteSource(url);
 //                AudioSource source = new LocalSource(new File(url));
                 AudioInfo info = source.getInfo();   //Preload the audio info.
-                if (info == null)
+                if (info.getError() != null)
                 {
                     player.getAudioQueue().add(source);
                     msg += "The provided URL has been added the to queue";
