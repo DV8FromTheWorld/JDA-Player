@@ -28,6 +28,7 @@ public class AudioInfo
     protected String description;
     protected String extractor;
     protected String thumbnail;
+    protected String error;
     protected AudioTimestamp duration;
 
     public JSONObject getJsonInfo()
@@ -68,6 +69,11 @@ public class AudioInfo
     public String getThumbnail()
     {
         return thumbnail;
+    }
+
+    public String getError()
+    {
+        return error;
     }
 
     public AudioTimestamp getDuration()

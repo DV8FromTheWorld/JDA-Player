@@ -16,6 +16,7 @@
 
 package net.dv8tion.jda.player.source;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 import sun.misc.IOUtils;
 
@@ -97,7 +98,15 @@ public class RemoteSource implements AudioSource
             if (infoData == null || infoData.length == 0)
                 throw new NullPointerException("The Youtube-DL process resulted in a null or zero-length INFO!");
 
-            JSONObject info = new JSONObject(new String(infoData));
+            String infoString = new String(infoData);
+            if (infoString.startsWith("ERROR"))
+            {
+                AudioInfo aInfo = new AudioInfo();
+                aInfo.error = infoString;
+                audioInfo = aInfo;
+                return aInfo;
+            }
+            JSONObject info = new JSONObject(infoString);
             AudioInfo aInfo = new AudioInfo();
 
             aInfo.jsonInfo = info;
@@ -136,6 +145,10 @@ public class RemoteSource implements AudioSource
             return aInfo;
         }
         catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+        catch (JSONException e)
         {
             e.printStackTrace();
         }
