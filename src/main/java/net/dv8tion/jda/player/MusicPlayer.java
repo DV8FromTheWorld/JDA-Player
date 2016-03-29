@@ -16,16 +16,17 @@
 
 package net.dv8tion.jda.player;
 
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.Random;
+
 import net.dv8tion.jda.audio.AudioConnection;
 import net.dv8tion.jda.audio.AudioSendHandler;
 import net.dv8tion.jda.player.source.AudioSource;
 import net.dv8tion.jda.player.source.AudioStream;
 import net.dv8tion.jda.player.source.AudioTimestamp;
 import net.dv8tion.jda.utils.SimpleLog;
-
-import java.io.IOException;
-import java.util.LinkedList;
-import java.util.Random;
 
 public class MusicPlayer implements AudioSendHandler
 {
@@ -38,6 +39,7 @@ public class MusicPlayer implements AudioSendHandler
     protected boolean autoContinue = true;
     protected boolean shuffle = false;
     protected boolean repeat = false;
+    protected float volume = 1.0F;
 
     protected enum State
     {
@@ -52,6 +54,16 @@ public class MusicPlayer implements AudioSendHandler
     public boolean isRepeat()
     {
         return repeat;
+    }
+
+    public float getVolume()
+    {
+        return this.volume;
+    }
+
+    public void setVolume(float volume)
+    {
+        this.volume = volume;
     }
 
     public void setShuffle(boolean shuffle)
@@ -123,6 +135,8 @@ public class MusicPlayer implements AudioSendHandler
         return state.equals(State.PLAYING);
     }
 
+    private byte[] buffer = new byte[AudioConnection.OPUS_FRAME_SIZE * PCM_FRAME_SIZE];
+
     @Override
     public byte[] provide20MsAudio()
     {
@@ -131,12 +145,21 @@ public class MusicPlayer implements AudioSendHandler
 //                    "Please provide an AudioInputStream using setAudioSource.");
         try
         {
-            int amountRead;
-            byte[] audio = new byte[AudioConnection.OPUS_FRAME_SIZE * PCM_FRAME_SIZE];
-            amountRead = currentAudioStream.read(audio, 0, audio.length);
+            int amountRead = currentAudioStream.read(buffer, 0, buffer.length);
             if (amountRead > -1)
             {
-                return audio;
+                if (amountRead<buffer.length) {
+                    Arrays.fill(buffer, amountRead, buffer.length - 1, (byte) 0);
+                }
+                if (volume != 1) {
+                    for (int i = 0; i < buffer.length; i+=2) {
+                        short sample = (short) ((buffer[i+1] & 0xff) | (buffer[i] << 8));
+                        sample = (short) (sample * volume);
+                        buffer[i+1] = (byte)(sample & 0xff);
+                        buffer[i] = (byte)((sample >> 8) & 0xff);
+                    }
+                }
+                return buffer;
             }
             else
             {
