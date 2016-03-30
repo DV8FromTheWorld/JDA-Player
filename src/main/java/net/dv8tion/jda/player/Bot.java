@@ -16,6 +16,7 @@
 
 package net.dv8tion.jda.player;
 
+import com.sun.jna.Platform;
 import net.dv8tion.jda.JDA;
 import net.dv8tion.jda.JDABuilder;
 import net.dv8tion.jda.MessageBuilder;
@@ -47,6 +48,7 @@ public class Bot extends ListenerAdapter
     {
         try
         {
+            System.out.println(Platform.RESOURCE_PREFIX);
             JSONObject obj = new JSONObject(new String(Files.readAllBytes(Paths.get("Config.json"))));
             JDA api = new JDABuilder()
                     .setEmail(obj.getString("Email"))
@@ -296,7 +298,7 @@ public class Bot extends ListenerAdapter
                 AudioSource source = new RemoteSource(url);
 //                AudioSource source = new LocalSource(new File(url));
                 AudioInfo info = source.getInfo();   //Preload the audio info.
-                if (info.getError() != null)
+                if (info.getError() == null)
                 {
                     player.getAudioQueue().add(source);
                     msg += "The provided URL has been added the to queue";

@@ -171,7 +171,7 @@ public class RemoteSource implements AudioSource
         if (ffmpegLaunchArgsF == null)
             ffmpegLaunchArgs.addAll(FFMPEG_LAUNCH_ARGS);
         else
-            ffmpegLaunchArgs.addAll(ytdlLaunchArgsF);
+            ffmpegLaunchArgs.addAll(ffmpegLaunchArgsF);
 
         ytdlLaunchArgs.add(url);    //specifies the URL to download.
 
