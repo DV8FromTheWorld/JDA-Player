@@ -1,6 +1,8 @@
 # project files
 config.json
 tokens.json
+Config.json
+admins.txt
 
 # music files
 *.mp3

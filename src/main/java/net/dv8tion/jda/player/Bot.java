@@ -124,6 +124,14 @@ public class Bot extends ListenerAdapter
 
         String message = event.getMessage().getContent();
 
+        if (message.startsWith("volume "))
+        {
+            float volume = Float.parseFloat(message.substring("volume ".length()));
+            volume = Math.min(1F, Math.max(0F, volume));
+            player.setVolume(volume);
+            event.getChannel().sendMessage("Volume was changed to: " + volume);
+        }
+
         if (message.equals("list"))
         {
             List<AudioSource> queue = player.getAudioQueue();
