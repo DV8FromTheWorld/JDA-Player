@@ -41,6 +41,8 @@ public class MusicPlayer implements AudioSendHandler
     protected boolean repeat = false;
     protected float volume = 1.0F;
 
+    private byte[] buffer = new byte[AudioConnection.OPUS_FRAME_SIZE * PCM_FRAME_SIZE];
+
     protected enum State
     {
         PLAYING, PAUSED, STOPPED;
@@ -110,8 +112,6 @@ public class MusicPlayer implements AudioSendHandler
             return null;
     }
 
-    // ============ JDA Player interface overrides =============
-
     public void play()
     {
         play0(true);
@@ -129,13 +129,33 @@ public class MusicPlayer implements AudioSendHandler
         //TODO: fire onPause
     }
 
+    public void stop()
+    {
+        stop0(true);
+    }
+
+    public boolean isPlaying()
+    {
+        return state == State.PLAYING;
+    }
+
+    public boolean isPaused()
+    {
+        return state == State.PAUSED;
+    }
+
+    public boolean isStopped()
+    {
+        return state == State.STOPPED;
+    }
+
+    // ============ JDA AudioSendHandler overrides =============
+
     @Override
     public boolean canProvide()
     {
         return state.equals(State.PLAYING);
     }
-
-    private byte[] buffer = new byte[AudioConnection.OPUS_FRAME_SIZE * PCM_FRAME_SIZE];
 
     @Override
     public byte[] provide20MsAudio()
@@ -148,14 +168,15 @@ public class MusicPlayer implements AudioSendHandler
             int amountRead = currentAudioStream.read(buffer, 0, buffer.length);
             if (amountRead > -1)
             {
-                if (amountRead<buffer.length) {
+                if (amountRead < buffer.length) {
                     Arrays.fill(buffer, amountRead, buffer.length - 1, (byte) 0);
                 }
                 if (volume != 1) {
+                    short sample;
                     for (int i = 0; i < buffer.length; i+=2) {
-                        short sample = (short) ((buffer[i+1] & 0xff) | (buffer[i] << 8));
+                        sample = (short)((buffer[ i+ 1] & 0xff) | (buffer[i] << 8));
                         sample = (short) (sample * volume);
-                        buffer[i+1] = (byte)(sample & 0xff);
+                        buffer[i + 1] = (byte)(sample & 0xff);
                         buffer[i] = (byte)((sample >> 8) & 0xff);
                     }
                 }
@@ -185,26 +206,6 @@ public class MusicPlayer implements AudioSendHandler
             SimpleLog.getLog("JDA-Player").log(e);
         }
         return null;
-    }
-
-    public void stop()
-    {
-        stop0(true);
-    }
-
-    public boolean isPlaying()
-    {
-        return state == State.PLAYING;
-    }
-
-    public boolean isPaused()
-    {
-        return state == State.PAUSED;
-    }
-
-    public boolean isStopped()
-    {
-        return state == State.STOPPED;
     }
 
     // ========= Internal Functions ==========
