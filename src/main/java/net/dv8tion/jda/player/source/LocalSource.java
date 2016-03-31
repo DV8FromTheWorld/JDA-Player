@@ -102,7 +102,7 @@ public class LocalSource implements AudioSource
 
             JSONObject info = new JSONObject(new String(infoData));
             JSONObject format = info.getJSONObject("format");
-            JSONObject tags = info.optJSONObject("tags");
+            JSONObject tags = format.optJSONObject("tags");
 
             audioInfo.jsonInfo = info;
             audioInfo.origin = file.getCanonicalPath();
