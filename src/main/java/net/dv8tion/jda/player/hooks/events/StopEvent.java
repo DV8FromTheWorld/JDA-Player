@@ -17,7 +17,6 @@
 package net.dv8tion.jda.player.hooks.events;
 
 import net.dv8tion.jda.player.MusicPlayer;
-import net.dv8tion.jda.player.hooks.PlayerEvent;
 
 public class StopEvent extends PlayerEvent
 {

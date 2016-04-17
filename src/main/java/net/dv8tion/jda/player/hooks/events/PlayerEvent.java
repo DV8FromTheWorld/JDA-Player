@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.dv8tion.jda.player.hooks;
+package net.dv8tion.jda.player.hooks.events;
 
 import net.dv8tion.jda.player.MusicPlayer;
 

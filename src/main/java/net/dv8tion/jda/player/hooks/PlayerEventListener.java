@@ -16,6 +16,8 @@
 
 package net.dv8tion.jda.player.hooks;
 
+import net.dv8tion.jda.player.hooks.events.PlayerEvent;
+
 public interface PlayerEventListener
 {
     void onEvent(PlayerEvent event);

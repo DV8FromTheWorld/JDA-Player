@@ -17,6 +17,8 @@
 package net.dv8tion.jda.player.hooks;
 
 
+import net.dv8tion.jda.player.hooks.events.PlayerEvent;
+
 import java.util.LinkedList;
 import java.util.List;
 
