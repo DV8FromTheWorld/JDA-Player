@@ -13,19 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.dv8tion.jda.player.source;
 
-import java.io.BufferedInputStream;
-import java.util.regex.Pattern;
+package net.dv8tion.jda.player.hooks;
 
-public abstract class AudioStream extends BufferedInputStream
+import net.dv8tion.jda.player.MusicPlayer;
+
+public abstract class PlayerEvent
 {
-    public static final Pattern TIME_PATTERN = Pattern.compile("(?<=time=).*?(?= bitrate)");
+    protected final MusicPlayer player;
 
-    public AudioStream()
+    public PlayerEvent(MusicPlayer player)
     {
-        super(null);
+        this.player = player;
     }
 
-    public abstract AudioTimestamp getCurrentTimestamp();
+    public MusicPlayer getPlayer()
+    {
+        return player;
+    }
 }

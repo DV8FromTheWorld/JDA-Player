@@ -1,4 +1,4 @@
-/**
+/*
  *     Copyright 2016 Austin Keener
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,17 +38,18 @@ import java.util.List;
 public class Bot extends ListenerAdapter
 {
     private MusicPlayer player = null;
+    private float volume = 0.35f;
 
     public Bot()
     {
         player = new MusicPlayer();
+        player.setVolume(volume);
     }
 
     public static void main(String[] args)
     {
         try
         {
-            System.out.println(Platform.RESOURCE_PREFIX);
             JSONObject obj = new JSONObject(new String(Files.readAllBytes(Paths.get("Config.json"))));
             JDA api = new JDABuilder()
                     .setEmail(obj.getString("Email"))
@@ -97,6 +98,7 @@ public class Bot extends ListenerAdapter
     // skip         - Skips the current song, automatically starting the next
     // nowplaying   - Prints information about the currently playing song (title, current time)
     // list         - Lists the songs in the queue
+    // volume [val] - Sets the volume of the MusicPlayer [0.0 - 1.0]
     // restart      - Restarts the current song or restarts the previous song if there is no current song playing.
     // repeat       - Makes the player repeat the currently playing song
     // reset        - Completely resets the player, fixing all errors and clearing the queue.
@@ -264,6 +266,7 @@ public class Bot extends ListenerAdapter
         {
             player.stop();
             player = new MusicPlayer();
+            player.setVolume(volume);
             event.getJDA().getAudioManager().setSendingHandler(player);
             event.getChannel().sendMessage("Music player has been completely reset.");
         }

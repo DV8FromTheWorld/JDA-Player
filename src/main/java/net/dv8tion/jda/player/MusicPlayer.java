@@ -1,4 +1,4 @@
-/**
+/*
  *     Copyright 2016 Austin Keener
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,6 +23,9 @@ import java.util.Random;
 
 import net.dv8tion.jda.audio.AudioConnection;
 import net.dv8tion.jda.audio.AudioSendHandler;
+import net.dv8tion.jda.player.hooks.PlayerEventListener;
+import net.dv8tion.jda.player.hooks.PlayerEventManager;
+import net.dv8tion.jda.player.hooks.events.*;
 import net.dv8tion.jda.player.source.AudioSource;
 import net.dv8tion.jda.player.source.AudioStream;
 import net.dv8tion.jda.player.source.AudioTimestamp;
@@ -31,6 +34,7 @@ import net.dv8tion.jda.utils.SimpleLog;
 public class MusicPlayer implements AudioSendHandler
 {
     public static final int PCM_FRAME_SIZE = 4;
+    protected PlayerEventManager eventManager = new PlayerEventManager();
     protected LinkedList<AudioSource> audioQueue = new LinkedList<>();
     protected AudioSource previousAudioSource = null;
     protected AudioSource currentAudioSource = null;
@@ -46,6 +50,16 @@ public class MusicPlayer implements AudioSendHandler
     protected enum State
     {
         PLAYING, PAUSED, STOPPED;
+    }
+
+    public void addEventListener(PlayerEventListener listener)
+    {
+        eventManager.register(listener);
+    }
+
+    public void removeEventListener(PlayerEventListener listener)
+    {
+        eventManager.unregister(listener);
     }
 
     public void setRepeat(boolean repeat)
@@ -85,8 +99,12 @@ public class MusicPlayer implements AudioSendHandler
 
     public void skipToNext()
     {
+        AudioSource skipped = currentAudioSource;
         playNext(false);
-        //TODO: fire onSkip
+
+        eventManager.handle(new SkipEvent(this, skipped));
+        if (state == State.STOPPED)
+            eventManager.handle(new FinishEvent(this));
     }
 
     public LinkedList<AudioSource> getAudioQueue()
@@ -126,7 +144,7 @@ public class MusicPlayer implements AudioSendHandler
             throw new IllegalStateException("Cannot pause a stopped player!");
 
         state = State.PAUSED;
-        //TODO: fire onPause
+        eventManager.handle(new PauseEvent(this));
     }
 
     public void stop()
@@ -189,7 +207,7 @@ public class MusicPlayer implements AudioSendHandler
                     if(repeat)
                     {
                         reload0(true, false);
-                        //TODO: fire onRepeat
+                        eventManager.handle(new RepeatEvent(this));
                     }
                     else
                     {
@@ -225,9 +243,10 @@ public class MusicPlayer implements AudioSendHandler
             throw new IllegalStateException("MusicPlayer: The audio queue is empty! Cannot start playing.");
 
         loadFromSource(audioQueue.removeFirst());
-
         state = State.PLAYING;
-        //TODO: fire onPlaying
+
+        if (fireEvent)
+            eventManager.handle(new PlayEvent(this));
     }
 
     protected void stop0(boolean fireEvent)
@@ -250,7 +269,9 @@ public class MusicPlayer implements AudioSendHandler
             currentAudioSource = null;
             currentAudioStream = null;
         }
-        //TODO: fire onStop
+
+        if (fireEvent)
+            eventManager.handle(new StopEvent(this));
     }
 
     protected void reload0(boolean autoPlay, boolean fireEvent)
@@ -263,20 +284,20 @@ public class MusicPlayer implements AudioSendHandler
 
         if (autoPlay)
             play0(false);
-
-        //TODO: fire onReload
+        if (fireEvent)
+            eventManager.handle(new ReloadEvent(this));
     }
 
     protected void playNext(boolean fireEvent)
     {
+        stop0(false);
         if (audioQueue.isEmpty())
         {
-            stop0(false);   //Maybe true?
-            //TODO: fire onFinish
+            if (fireEvent)
+                eventManager.handle(new FinishEvent(this));
             return;
         }
 
-        stop0(false);
         AudioSource source;
         if (shuffle)
         {
@@ -288,7 +309,8 @@ public class MusicPlayer implements AudioSendHandler
         loadFromSource(source);
 
         play0(false);
-        //TODO: fire onNext
+        if (fireEvent)
+            eventManager.handle(new NextEvent(this));
     }
 
     protected void loadFromSource(AudioSource source)
