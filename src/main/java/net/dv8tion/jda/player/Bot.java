@@ -20,30 +20,31 @@ import com.sun.jna.Platform;
 import net.dv8tion.jda.JDA;
 import net.dv8tion.jda.JDABuilder;
 import net.dv8tion.jda.MessageBuilder;
+import net.dv8tion.jda.audio.AudioSendHandler;
 import net.dv8tion.jda.entities.VoiceChannel;
 import net.dv8tion.jda.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.hooks.ListenerAdapter;
+import net.dv8tion.jda.managers.AudioManager;
 import net.dv8tion.jda.player.source.AudioInfo;
 import net.dv8tion.jda.player.source.AudioSource;
 import net.dv8tion.jda.player.source.AudioTimestamp;
 import net.dv8tion.jda.player.source.RemoteSource;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
 
 public class Bot extends ListenerAdapter
 {
-    private MusicPlayer player = null;
-    private float volume = 0.35f;
-
+    public static final float DEFAULT_VOLUME = 0.35f;
     public Bot()
     {
-        player = new MusicPlayer();
-        player.setVolume(volume);
+
     }
 
     public static void main(String[] args)
@@ -52,29 +53,33 @@ public class Bot extends ListenerAdapter
         {
             JSONObject obj = new JSONObject(new String(Files.readAllBytes(Paths.get("Config.json"))));
             JDA api = new JDABuilder()
-                    .setEmail(obj.getString("Email"))
-                    .setPassword(obj.getString("password"))
+                    .setBotToken(obj.getString("botToken"))
                     .addListener(new Bot())
                     .buildBlocking();
 
         }
         catch (IllegalArgumentException e)
         {
-            System.out.println("The config was not populated. Please enter an email and password.");
+            System.out.println("The config was not populated. Please provide a token.");
         }
         catch (LoginException e)
         {
-            System.out.println("The provided email / password combination was incorrect. Please provide valid details.");
+            System.out.println("The provided botToken was incorrect. Please provide valid details.");
         }
         catch (InterruptedException e)
         {
             e.printStackTrace();
         }
+        catch (JSONException e)
+        {
+            System.err.println("Encountered a JSON error. Most likely caused due to an outdated or ill-formated config.\n" +
+                    "Please delete the config so that it can be regenerated. JSON Error:\n");
+            e.printStackTrace();
+        }
         catch (IOException e)
         {
             JSONObject obj = new JSONObject();
-            obj.put("Email", "");
-            obj.put("password", "");
+            obj.put("botToken", "");
             try
             {
                 Files.write(Paths.get("Config.json"), obj.toString(4).getBytes());
@@ -107,24 +112,30 @@ public class Bot extends ListenerAdapter
         //If the person who sent the message isn't a known auth'd user, ignore.
         try
         {
+            //We specifically reread the admins.txt each time a command is run so that we can update the admins.txt
+            // while the bot is running. Basically this is just me being lazy.
             if (!Files.readAllLines(Paths.get("admins.txt")).contains(event.getAuthor().getId()))
                 return;
         }
         catch (IOException e)
         {
-            //Fail silently. Allows the admin system to be "disabled".
+            //Fail silently. Allows the admin system to be "disabled" when admins.txt does not exist.
 //            e.printStackTrace();
         }
-//        if (       !event.getAuthor().getId().equals("107562988810027008")  //DV8FromTheWorld
-//                && !event.getAuthor().getId().equals("110172485864964096")  //TheVolatileV
-//                && !event.getAuthor().getId().equals("107562872392949760")  //GadgetTvMan
-//                && !event.getAuthor().getId().equals("107490111414882304")  //Almighty Alpaca
-//                && !event.getAuthor().getId().equals("122758889815932930")  //Kantenkugel
-//                && !event.getAuthor().getId().equals("109871314214326272")  //Etaran
-//                )
-//            return;
 
         String message = event.getMessage().getContent();
+        AudioManager manager = event.getGuild().getAudioManager();
+        MusicPlayer player;
+        if (manager.getSendingHandler() == null)
+        {
+            player = new MusicPlayer();
+            player.setVolume(DEFAULT_VOLUME);
+            manager.setSendingHandler(player);
+        }
+        else
+        {
+            player = (MusicPlayer) manager.getSendingHandler();
+        }
 
         if (message.startsWith("volume "))
         {
@@ -222,11 +233,11 @@ public class Bot extends ListenerAdapter
                 event.getChannel().sendMessage("There isn't a VoiceChannel in this Guild with the name: '" + chanName + "'");
                 return;
             }
-            event.getJDA().getAudioManager().openAudioConnection(channel);
+            manager.openAudioConnection(channel);
         }
         //Disconnect the audio connection with the VoiceChannel.
         if (message.equals("leave"))
-            event.getJDA().getAudioManager().closeAudioConnection();
+            manager.closeAudioConnection();
 
         if (message.equals("skip"))
         {
@@ -266,18 +277,14 @@ public class Bot extends ListenerAdapter
         {
             player.stop();
             player = new MusicPlayer();
-            player.setVolume(volume);
-            event.getJDA().getAudioManager().setSendingHandler(player);
+            player.setVolume(DEFAULT_VOLUME);
+            manager.setSendingHandler(player);
             event.getChannel().sendMessage("Music player has been completely reset.");
         }
 
         //Start playing audio with our FilePlayer. If we haven't created and registered a FilePlayer yet, do that.
         if (message.startsWith("play"))
         {
-            //Make sure our player has been provided to JDA to provide audio data to send.
-            if (event.getJDA().getAudioManager().getSendingHandler() == null)
-                event.getJDA().getAudioManager().setSendingHandler(player);
-
             //If no URL was provided.
             if (message.equals("play"))
             {
