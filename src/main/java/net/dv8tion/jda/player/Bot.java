@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 public class Bot extends ListenerAdapter
@@ -313,24 +314,63 @@ public class Bot extends ListenerAdapter
             {
                 String msg = "";
                 String url = message.substring("play ".length());
-                AudioSource source = new RemoteSource(url);
+                Playlist playlist = Playlist.getPlaylist(url);
+                List<AudioSource> sources = playlist.getSources();
+//                AudioSource source = new RemoteSource(url);
 //                AudioSource source = new LocalSource(new File(url));
-                AudioInfo info = source.getInfo();   //Preload the audio info.
-                if (info.getError() == null)
+//                AudioInfo info = source.getInfo();   //Preload the audio info.
+                if (sources.size() > 1)
                 {
-                    player.getAudioQueue().add(source);
-                    msg += "The provided URL has been added the to queue";
-                    if (player.isStopped())
+                    event.getChannel().sendMessage("Found a playlist with **" + sources.size() + "** entries.\n" +
+                            "Proceeding to gather information and queue sources. This may take some time...");
+                    final MusicPlayer fPlayer = player;
+                    Thread thread = new Thread()
                     {
-                        player.play();
-                        msg += " and the player has started playing";
-                    }
-                    event.getChannel().sendMessage(msg + ".");
+                        @Override
+                        public void run()
+                        {
+                            for (Iterator<AudioSource> it = sources.iterator(); it.hasNext();)
+                            {
+                                AudioSource source = it.next();
+                                AudioInfo info = source.getInfo();
+                                List<AudioSource> queue = fPlayer.getAudioQueue();
+                                if (info.getError() == null)
+                                {
+                                    queue.add(source);
+                                    if (fPlayer.isStopped())
+                                        fPlayer.play();
+                                }
+                                else
+                                {
+                                    event.getChannel().sendMessage("Error detected, skipping source. Error:\n" + info.getError());
+                                    it.remove();
+                                }
+                            }
+                            event.getChannel().sendMessage("Finished queuing provided playlist. Successfully queued **" + sources.size() + "** sources");
+                        }
+                    };
+                    thread.start();
                 }
                 else
                 {
-                    event.getChannel().sendMessage("There was an error while loading the provided URL.\n" +
-                            "Error: " + info.getError());
+                    AudioSource source = sources.get(0);
+                    AudioInfo info = source.getInfo();
+                    if (info.getError() == null)
+                    {
+                        player.getAudioQueue().add(source);
+                        msg += "The provided URL has been added the to queue";
+                        if (player.isStopped())
+                        {
+                            player.play();
+                            msg += " and the player has started playing";
+                        }
+                        event.getChannel().sendMessage(msg + ".");
+                    }
+                    else
+                    {
+                        event.getChannel().sendMessage("There was an error while loading the provided URL.\n" +
+                                "Error: " + info.getError());
+                    }
                 }
             }
         }

@@ -71,7 +71,7 @@ public class RemoteSource implements AudioSource
     }
 
     @Override
-    public AudioInfo getInfo()
+    public synchronized AudioInfo getInfo()
     {
         if (audioInfo != null)
             return audioInfo;
