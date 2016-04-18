@@ -139,6 +139,28 @@ public class RemoteSource implements AudioSource
                 audioInfo.duration = info.optInt("duration", -1) != -1
                         ? AudioTimestamp.fromSeconds(info.getInt("duration"))
                         : null;
+
+                //Use FFprobe to find the duration because YT-DL didn't give it to us.
+                if (audioInfo.duration == null)
+                {
+                    List<String> ffprobeInfoArgs = new LinkedList<>();
+                    ffprobeInfoArgs.addAll(LocalSource.FFPROBE_INFO_ARGS);
+                    ffprobeInfoArgs.add("-i");
+                    ffprobeInfoArgs.add(info.optString("url", url));
+
+                    infoProcess = new ProcessBuilder().command(ffprobeInfoArgs).start();
+                    infoData = IOUtils.readFully(infoProcess.getInputStream(), -1, false);
+                    if (infoData != null && infoData.length > 0)
+                    {
+                        info = new JSONObject(new String(infoData)).getJSONObject("format");
+
+                        if (info.optDouble("duration", -1.0) != -1.0)
+                        {
+                            int duration = Math.round((float) info.getDouble("duration"));
+                            audioInfo.duration = AudioTimestamp.fromSeconds(duration);
+                        }
+                    }
+                }
             }
         }
         catch (IOException e)
