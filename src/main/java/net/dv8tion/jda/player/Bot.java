@@ -38,6 +38,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 public class Bot extends ListenerAdapter
@@ -315,7 +316,7 @@ public class Bot extends ListenerAdapter
                 String msg = "";
                 String url = message.substring("play ".length());
                 Playlist playlist = Playlist.getPlaylist(url);
-                List<AudioSource> sources = playlist.getSources();
+                List<AudioSource> sources = new LinkedList(playlist.getSources());
 //                AudioSource source = new RemoteSource(url);
 //                AudioSource source = new LocalSource(new File(url));
 //                AudioInfo info = source.getInfo();   //Preload the audio info.
