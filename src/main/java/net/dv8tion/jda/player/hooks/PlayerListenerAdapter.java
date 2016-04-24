@@ -29,6 +29,7 @@ public abstract class PlayerListenerAdapter implements PlayerEventListener
     public void onFinish(FinishEvent event) {}
     public void onRepeat(RepeatEvent event) {}
     public void onReload(ReloadEvent event) {}
+    public void onNext(NextEvent event) {}
 
     @Override
     public void onEvent(PlayerEvent event)
@@ -49,5 +50,7 @@ public abstract class PlayerListenerAdapter implements PlayerEventListener
             onRepeat((RepeatEvent) event);
         else if (event instanceof ReloadEvent)
             onReload((ReloadEvent) event);
+        else if(event instanceof NextEvent)
+            onNext((NextEvent) event);
     }
 }
