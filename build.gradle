@@ -114,7 +114,7 @@ repositories {
 }
 
 dependencies {
-    compile 'net.dv8tion:JDA:2.0.0_242'
+    compile 'net.dv8tion:JDA:2.0.0_251'
 }
 
 class Version {
@@ -126,46 +126,6 @@ class Version {
 
     String toString() {
         "${major}.${minor}.${revision}_$build"
-    }
-}
-
-uploadArchives {
-    onlyIf {
-        System.getenv("BUILD_NUMBER")
-    }
-    repositories {
-        mavenDeployer {
-            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-
-            pom.project {
-                name 'JDA-Player'
-                packaging 'jar'
-                // optionally artifactId can be defined here
-                description 'An AudioPlayer for JDA that provides functionality to play local files and stream from remote sources.'
-                url 'https://github.com/DV8FromTheWorld/JDA-Player'
-
-                scm {
-                    connection 'scm:git:git@github.com:DV8FromTheWorld/JDA-Player.git'
-                    developerConnection 'scm:git:git@github.com:DV8FromTheWorld/JDA-Player.git'
-                    url 'scm:git:git@github.com:DV8FromTheWorld/JDA-Player.git'
-                }
-
-                licenses {
-                    license {
-                        name 'The Apache License, Version 2.0'
-                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                    }
-                }
-
-                developers {
-                    developer {
-                        id 'DV8FromTheWorld'
-                        name 'Austin Keener'
-                        email 'keeneraustin@yahoo.com'
-                    }
-                }
-            }
-        }
     }
 }
 
@@ -197,11 +157,9 @@ compileJava.source = sourceSets.filtered.java
 compileJava.dependsOn processVersion
 
 // Creates the w/ dependencies jar.
-uploadArchives.dependsOn fatJar
-bintrayUpload.dependsOn uploadArchives
+bintrayUpload.dependsOn fatJar
 
 // If we don't have the username and password for uploading, we probably also
 // can't sign the archives, so skip these tasks.
 signArchives.onlyIf { !ossrhUsername.empty && !ossrhPassword.empty }
-uploadArchives.onlyIf { !ossrhUsername.empty && !ossrhPassword.empty }
 bintrayUpload.onlyIf { !bintrayUsername.empty && !bintrayApiKey.empty }
