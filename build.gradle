@@ -1,3 +1,4 @@
+//use: gradlew clean build fatJar signArchives install bintrayUpload
 import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
@@ -11,7 +12,7 @@ apply plugin: 'eclipse'
 
 def versionObj = new Version(major: 0, minor: 2, revision: 1)
 group = "net.dv8tion"
-archivesBaseName = "JDA-Player"
+archivesBaseName = "jda-player"
 version = "$versionObj"
 
 sourceCompatibility = 1.8
@@ -130,6 +131,7 @@ class Version {
 }
 
 bintray {
+
     user = bintrayUsername
     key = bintrayApiKey
     pkg {
@@ -137,7 +139,17 @@ bintray {
         name = 'JDA-Player'
         licenses = ['Apache-2.0']
         vcsUrl = 'https://github.com/DV8FromTheWorld/JDA-Player.git'
-        configurations = ['archives']
+        filesSpec {
+            from ('build/libs') {
+                exclude "**withDependencies**"
+            }
+            from 'build/poms'
+            into "${project.group.replace(".", "/")}/${archivesBaseName}/${project.version}"
+
+            rename { String fileName ->
+                fileName.replace("pom-default.xml", "${archivesBaseName}-${project.version}.pom")
+            }
+        }
         publish = true
         version {
             name = project.version
@@ -166,9 +178,7 @@ String getProjectProperty(String propertyName)
 compileJava.source = sourceSets.filtered.java
 compileJava.dependsOn processVersion
 
-// Creates the w/ dependencies jar.
-signArchives.dependsOn fatJar
-bintrayUpload.dependsOn signArchives
+//use: gradlew clean build fatJar signArchives install bintrayUpload
 
 // If we don't have the username and password for uploading, we probably also
 // can't sign the archives, so skip these tasks.
