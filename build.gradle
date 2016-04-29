@@ -152,14 +152,28 @@ bintrayUpload {
     }
 }
 
+String getProjectProperty(String propertyName)
+{
+    String property = ""
+    if (hasProperty(propertyName))
+    {
+        property = this.properties[propertyName]
+    }
+    return property
+}
+
 // tell the compileJava task to compile the filtered source
 compileJava.source = sourceSets.filtered.java
 compileJava.dependsOn processVersion
 
 // Creates the w/ dependencies jar.
-bintrayUpload.dependsOn fatJar
+signArchives.dependsOn fatJar
+bintrayUpload.dependsOn signArchives
 
 // If we don't have the username and password for uploading, we probably also
 // can't sign the archives, so skip these tasks.
-signArchives.onlyIf { !ossrhUsername.empty && !ossrhPassword.empty }
-bintrayUpload.onlyIf { !bintrayUsername.empty && !bintrayApiKey.empty }
+signArchives.onlyIf {(!getProjectProperty("signing.keyId").empty
+    && !getProjectProperty("signing.password").empty
+    && !getProjectProperty("signing.secretKeyRingFile").empty) }
+bintrayUpload.onlyIf { (!getProjectProperty("bintrayUsername").empty
+        && !getProjectProperty("bintrayApiKey").empty) }
