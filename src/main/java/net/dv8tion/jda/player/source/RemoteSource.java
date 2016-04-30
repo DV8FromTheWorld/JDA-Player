@@ -136,6 +136,7 @@ public class RemoteSource implements AudioSource
                 audioInfo.thumbnail = !info.optString("thumbnail", "").isEmpty()
                         ? info.getString("thumbnail")
                         : null;
+                audioInfo.isLive = info.has("is_live") && !info.isNull("is_live") && info.getBoolean("is_live");
                 audioInfo.duration = info.optInt("duration", -1) != -1
                         ? AudioTimestamp.fromSeconds(info.getInt("duration"))
                         : null;

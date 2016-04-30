@@ -29,6 +29,7 @@ public class AudioInfo
     protected String extractor;
     protected String thumbnail;
     protected String error;
+    protected boolean isLive;
     protected AudioTimestamp duration;
 
     public JSONObject getJsonInfo()
@@ -74,6 +75,10 @@ public class AudioInfo
     public String getError()
     {
         return error;
+    }
+
+    public boolean isLive() {
+        return isLive;
     }
 
     public AudioTimestamp getDuration()
