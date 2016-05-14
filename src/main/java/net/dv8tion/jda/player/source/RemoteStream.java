@@ -79,7 +79,9 @@ public class RemoteStream extends AudioStream
                     }
                     catch (IOException e)
                     {
-                        e.printStackTrace();
+                        //If the pipe being closed caused this problem, it was because it tried to write when it closed.
+                        if (!e.getMessage().contains("The pipe has been ended"))
+                            e.printStackTrace();
                     }
                     finally
                     {
@@ -88,19 +90,13 @@ public class RemoteStream extends AudioStream
                             if (fromYTDL != null)
                                 fromYTDL.close();
                         }
-                        catch (IOException e)
-                        {
-                            e.printStackTrace();
-                        }
+                        catch (IOException e) {}
                         try
                         {
                             if (toFFmpeg != null)
                                 toFFmpeg.close();
                         }
-                        catch (IOException e)
-                        {
-                            e.printStackTrace();
-                        }
+                        catch (IOException e) {}
                     }
                 }
             };

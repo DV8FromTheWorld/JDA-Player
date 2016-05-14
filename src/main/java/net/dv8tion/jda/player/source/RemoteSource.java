@@ -89,6 +89,7 @@ public class RemoteSource implements AudioSource
         infoArgs.add("--ignore-errors");    //Ignore errors, obviously
         infoArgs.add("-j");                 //Dumps the json about the file into STDout
         infoArgs.add("--skip-download");    //Doesn't actually download the file.
+        infoArgs.add("--");                 //Url separator. Deals with YT ids that start with --
         infoArgs.add(url);                  //specifies the URL to download.
 
         audioInfo = new AudioInfo();
@@ -196,6 +197,7 @@ public class RemoteSource implements AudioSource
         else
             ffmpegLaunchArgs.addAll(ffmpegLaunchArgsF);
 
+        ytdlLaunchArgs.add("--");   //Url separator. Deals with YT ids that start with --
         ytdlLaunchArgs.add(url);    //specifies the URL to download.
 
         return new RemoteStream(ytdlLaunchArgs, ffmpegLaunchArgs);

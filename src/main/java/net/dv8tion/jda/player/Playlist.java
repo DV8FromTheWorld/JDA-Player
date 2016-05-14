@@ -57,7 +57,8 @@ public class Playlist
     {
         List<String> infoArgs = new LinkedList<>();
         infoArgs.addAll(YOUTUBE_DL_PLAYLIST_ARGS);
-        infoArgs.add(url);
+        infoArgs.add("--"); //Url separator. Deals with YT ids that start with --
+        infoArgs.add( url);
 
         //Fire up Youtube-dl and get all sources from the provided url.
         List<AudioSource> sources = new ArrayList<>();
