@@ -202,26 +202,14 @@ public class MusicPlayer implements AudioSendHandler
             }
             else
             {
-                if (autoContinue)
-                {
-                    if(repeat)
-                    {
-                        reload0(true, false);
-                        eventManager.handle(new RepeatEvent(this));
-                    }
-                    else
-                    {
-                        playNext(true);
-                    }
-                }
-                else
-                    stop0(true);
+                sourceFinished();
                 return null;
             }
         }
         catch (IOException e)
         {
-            SimpleLog.getLog("JDA-Player").log(e);
+            SimpleLog.getLog("JDA-Player").warn("A source closed unexpectantly? Oh well I guess...");
+            sourceFinished();
         }
         return null;
     }
@@ -311,6 +299,24 @@ public class MusicPlayer implements AudioSendHandler
         play0(false);
         if (fireEvent)
             eventManager.handle(new NextEvent(this));
+    }
+
+    protected void sourceFinished()
+    {
+        if (autoContinue)
+        {
+            if(repeat)
+            {
+                reload0(true, false);
+                eventManager.handle(new RepeatEvent(this));
+            }
+            else
+            {
+                playNext(true);
+            }
+        }
+        else
+            stop0(true);
     }
 
     protected void loadFromSource(AudioSource source)
