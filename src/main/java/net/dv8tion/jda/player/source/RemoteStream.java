@@ -57,7 +57,7 @@ public class RemoteStream extends AudioStream
             final Process ytdlProcessF = ytdlProcess;
             final Process ffmpegProcessF = ffmpegProcess;
 
-            ytdlToFFmpegThread = new Thread()
+            ytdlToFFmpegThread = new Thread("RemoteSource ytdlToFFmpeg Bridge")
             {
                 @Override
                 public void run()
@@ -101,7 +101,7 @@ public class RemoteStream extends AudioStream
                 }
             };
 
-            ytdlErrGobler = new Thread()
+            ytdlErrGobler = new Thread("RemoteStream ytdlErrGobler")
             {
                 @Override
                 public void run()
@@ -129,7 +129,7 @@ public class RemoteStream extends AudioStream
                 }
             };
 
-            ffmpegErrGobler = new Thread()
+            ffmpegErrGobler = new Thread("RemoteStream ffmpegErrGobler")
             {
                 @Override
                 public void run()

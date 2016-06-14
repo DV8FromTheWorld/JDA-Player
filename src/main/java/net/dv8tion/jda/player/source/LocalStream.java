@@ -40,7 +40,7 @@ public class LocalStream extends AudioStream
 
             final Process ffmpegProcessF = ffmpegProcess;
 
-            ffmpegErrGobler = new Thread()
+            ffmpegErrGobler = new Thread("LocalStream ffmpegErrGobler")
             {
                 @Override
                 public void run()
