@@ -33,6 +33,7 @@ import net.dv8tion.jda.utils.SimpleLog;
 
 public class MusicPlayer implements AudioSendHandler
 {
+    public static final SimpleLog LOG = SimpleLog.getLog("JDAPlayer");
     public static final int PCM_FRAME_SIZE = 4;
     protected PlayerEventManager eventManager = new PlayerEventManager();
     protected LinkedList<AudioSource> audioQueue = new LinkedList<>();
