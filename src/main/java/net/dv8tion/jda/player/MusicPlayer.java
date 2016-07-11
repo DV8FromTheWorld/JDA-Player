@@ -29,6 +29,7 @@ import java.util.Random;
 
 public class MusicPlayer implements AudioSendHandler
 {
+    public static final SimpleLog LOG = SimpleLog.getLog("JDAPlayer");
     public static final int PCM_FRAME_SIZE = 4;
     protected LinkedList<AudioSource> audioQueue = new LinkedList<>();
     protected AudioSource previousAudioSource = null;

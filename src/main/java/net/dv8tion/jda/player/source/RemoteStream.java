@@ -16,14 +16,14 @@
 
 package net.dv8tion.jda.player.source;
 
-import java.io.BufferedInputStream;
+import net.dv8tion.jda.player.MusicPlayer;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class RemoteStream extends AudioStream
 {
@@ -47,11 +47,11 @@ public class RemoteStream extends AudioStream
             ProcessBuilder pBuilder = new ProcessBuilder();
 
             pBuilder.command(ytdlLaunchArgs);
-            System.out.println("Command: " + pBuilder.command());
+            MusicPlayer.LOG.debug("Command: " + pBuilder.command());
             ytdlProcess = pBuilder.start();
 
             pBuilder.command(ffmpegLaunchArgs);
-            System.out.println("Command: " + pBuilder.command());
+            MusicPlayer.LOG.debug("Command: " + pBuilder.command());
             ffmpegProcess = pBuilder.start();
 
             final Process ytdlProcessF = ytdlProcess;

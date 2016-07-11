@@ -1,5 +1,7 @@
 package net.dv8tion.jda.player.source;
 
+import net.dv8tion.jda.player.MusicPlayer;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -19,7 +21,7 @@ public class LocalStream extends AudioStream
             ProcessBuilder pBuilder = new ProcessBuilder();
 
             pBuilder.command(ffmpegLaunchArgs);
-            System.out.println("Command: " + pBuilder.command());
+            MusicPlayer.LOG.debug("Command: " + pBuilder.command());
             ffmpegProcess = pBuilder.start();
 
             final Process ffmpegProcessF = ffmpegProcess;
