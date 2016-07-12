@@ -37,7 +37,7 @@ public class LocalStream extends AudioStream
 
                         fromFFmpeg = ffmpegProcessF.getErrorStream();
                         if (fromFFmpeg == null)
-                            System.out.println("fromFFmpeg is null");
+                            MusicPlayer.LOG.warn("fromFFmpeg is null");
 
                         byte[] buffer = new byte[1024];
                         int amountRead = -1;
@@ -56,7 +56,7 @@ public class LocalStream extends AudioStream
                     }
                     catch (IOException e)
                     {
-                        e.printStackTrace();
+                        MusicPlayer.LOG.fatal(e);
                     }
                 }
             };
@@ -66,14 +66,14 @@ public class LocalStream extends AudioStream
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            MusicPlayer.LOG.fatal(e);
             try
             {
                 close();
             }
             catch (IOException e1)
             {
-                e1.printStackTrace();
+                MusicPlayer.LOG.fatal(e1);
             }
         }
     }

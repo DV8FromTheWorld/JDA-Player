@@ -16,6 +16,7 @@
 
 package net.dv8tion.jda.player.source;
 
+import net.dv8tion.jda.player.MusicPlayer;
 import org.json.JSONException;
 import org.json.JSONObject;
 import sun.misc.IOUtils;
@@ -74,7 +75,7 @@ public class LocalSource implements AudioSource
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            MusicPlayer.LOG.fatal(e);
         }
         return null;
     }
@@ -130,15 +131,10 @@ public class LocalSource implements AudioSource
                     : null;
 
         }
-        catch (IOException e)
+        catch (IOException | JSONException e)
         {
             audioInfo.error = e.getMessage();
-            e.printStackTrace();
-        }
-        catch (JSONException e)
-        {
-            audioInfo.error = e.getMessage();
-            e.printStackTrace();
+            MusicPlayer.LOG.debug(e);
         }
         return audioInfo;
     }
@@ -156,7 +152,7 @@ public class LocalSource implements AudioSource
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            MusicPlayer.LOG.fatal(e);
             return null;
         }
     }

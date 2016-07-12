@@ -79,7 +79,7 @@ public class RemoteStream extends AudioStream
                     }
                     catch (IOException e)
                     {
-                        e.printStackTrace();
+                        MusicPlayer.LOG.fatal(e);
                     }
                     finally
                     {
@@ -90,7 +90,7 @@ public class RemoteStream extends AudioStream
                         }
                         catch (IOException e)
                         {
-                            e.printStackTrace();
+                            MusicPlayer.LOG.fatal(e);
                         }
                         try
                         {
@@ -99,7 +99,7 @@ public class RemoteStream extends AudioStream
                         }
                         catch (IOException e)
                         {
-                            e.printStackTrace();
+                            MusicPlayer.LOG.fatal(e);
                         }
                     }
                 }
@@ -123,12 +123,12 @@ public class RemoteStream extends AudioStream
                         int amountRead = -1;
                         while (!isInterrupted() && ((amountRead = fromYTDL.read(buffer)) > -1))
                         {
-                            System.out.println("ERR YTDL: " + new String(Arrays.copyOf(buffer, amountRead)));
+                            MusicPlayer.LOG.warn("ERR YTDL: " + new String(Arrays.copyOf(buffer, amountRead)));
                         }
                     }
                     catch (IOException e)
                     {
-                        e.printStackTrace();
+                        MusicPlayer.LOG.fatal(e);
                     }
                 }
             };
@@ -144,7 +144,7 @@ public class RemoteStream extends AudioStream
 
                         fromFFmpeg = ffmpegProcessF.getErrorStream();
                         if (fromFFmpeg == null)
-                            System.out.println("fromYTDL is null");
+                            MusicPlayer.LOG.warn("fromYTDL is null");
 
                         byte[] buffer = new byte[1024];
                         int amountRead = -1;
@@ -175,14 +175,14 @@ public class RemoteStream extends AudioStream
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            MusicPlayer.LOG.debug(e);
             try
             {
                 close();
             }
             catch (IOException e1)
             {
-                e1.printStackTrace();
+                MusicPlayer.LOG.fatal(e1);
             }
         }
     }
