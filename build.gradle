@@ -86,6 +86,7 @@ task sourcesJar(type: Jar) {
 // create a single Jar with all dependencies
 task fatJar(type: Jar) {
     manifest {
+        attributes 'Main-Class': 'net.dv8tion.jda.player.Bot'
         attributes 'Implementation-Version': version
     }
 
@@ -115,7 +116,7 @@ repositories {
 }
 
 dependencies {
-    compile 'net.dv8tion:JDA:2.0.0_251'
+    compile 'net.dv8tion:JDA:2.2.0_334'
 }
 
 class Version {
