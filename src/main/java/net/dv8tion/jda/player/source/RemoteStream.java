@@ -47,11 +47,9 @@ public class RemoteStream extends AudioStream
             ProcessBuilder pBuilder = new ProcessBuilder();
 
             pBuilder.command(ytdlLaunchArgs);
-            System.out.println("Command: " + pBuilder.command());
             ytdlProcess = pBuilder.start();
 
             pBuilder.command(ffmpegLaunchArgs);
-            System.out.println("Command: " + pBuilder.command());
             ffmpegProcess = pBuilder.start();
 
             final Process ytdlProcessF = ytdlProcess;
