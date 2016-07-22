@@ -35,7 +35,6 @@ public class LocalStream extends AudioStream
             ProcessBuilder pBuilder = new ProcessBuilder();
 
             pBuilder.command(ffmpegLaunchArgs);
-            System.out.println("Command: " + pBuilder.command());
             ffmpegProcess = pBuilder.start();
 
             final Process ffmpegProcessF = ffmpegProcess;
