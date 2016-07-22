@@ -98,8 +98,6 @@ public class LocalSource implements AudioSource
             if (infoData == null || infoData.length == 0)
                 throw new NullPointerException("The FFprobe process resulted in a null or zero-length INFO!");
 
-            System.out.println(new String(infoData));
-
             JSONObject info = new JSONObject(new String(infoData));
             JSONObject format = info.getJSONObject("format");
             JSONObject tags = format.optJSONObject("tags");
