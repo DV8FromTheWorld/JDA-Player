@@ -16,6 +16,8 @@
 
 package net.dv8tion.jda.player.source;
 
+import net.dv8tion.jda.player.MusicPlayer;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -35,7 +37,7 @@ public class LocalStream extends AudioStream
             ProcessBuilder pBuilder = new ProcessBuilder();
 
             pBuilder.command(ffmpegLaunchArgs);
-            System.out.println("Command: " + pBuilder.command());
+            MusicPlayer.LOG.debug("Command: " + pBuilder.command());
             ffmpegProcess = pBuilder.start();
 
             final Process ffmpegProcessF = ffmpegProcess;
@@ -51,7 +53,7 @@ public class LocalStream extends AudioStream
 
                         fromFFmpeg = ffmpegProcessF.getErrorStream();
                         if (fromFFmpeg == null)
-                            System.out.println("fromFFmpeg is null");
+                            MusicPlayer.LOG.fatal("LocalStream: ErrGobler: fromFFmpeg is null");
 
                         byte[] buffer = new byte[1024];
                         int amountRead = -1;
@@ -70,7 +72,7 @@ public class LocalStream extends AudioStream
                     }
                     catch (IOException e)
                     {
-                        e.printStackTrace();
+                        MusicPlayer.LOG.log(e);
                     }
                 }
             };
@@ -80,14 +82,14 @@ public class LocalStream extends AudioStream
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            MusicPlayer.LOG.log(e);
             try
             {
                 close();
             }
             catch (IOException e1)
             {
-                e1.printStackTrace();
+                MusicPlayer.LOG.log(e1);
             }
         }
     }

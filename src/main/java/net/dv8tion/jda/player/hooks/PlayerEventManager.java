@@ -17,6 +17,7 @@
 package net.dv8tion.jda.player.hooks;
 
 
+import net.dv8tion.jda.player.MusicPlayer;
 import net.dv8tion.jda.player.hooks.events.PlayerEvent;
 
 import java.util.LinkedList;
@@ -51,7 +52,7 @@ public class PlayerEventManager
             }
             catch (Throwable throwable)
             {
-                throwable.printStackTrace();
+                MusicPlayer.LOG.log(throwable);
             }
         }
     }

@@ -90,7 +90,7 @@ public class Playlist
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            MusicPlayer.LOG.log(e);
         }
         finally
         {

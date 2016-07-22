@@ -34,6 +34,7 @@ import net.dv8tion.jda.utils.SimpleLog;
 public class MusicPlayer implements AudioSendHandler
 {
     public static final int PCM_FRAME_SIZE = 4;
+    public static final SimpleLog LOG = SimpleLog.getLog("JDAPlayer");
     protected PlayerEventManager eventManager = new PlayerEventManager();
     protected LinkedList<AudioSource> audioQueue = new LinkedList<>();
     protected AudioSource previousAudioSource = null;
@@ -208,7 +209,7 @@ public class MusicPlayer implements AudioSendHandler
         }
         catch (IOException e)
         {
-            SimpleLog.getLog("JDA-Player").warn("A source closed unexpectantly? Oh well I guess...");
+            LOG.warn("A source closed unexpectantly? Oh well I guess...");
             sourceFinished();
         }
         return null;
@@ -249,7 +250,7 @@ public class MusicPlayer implements AudioSendHandler
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            LOG.log(e);
         }
         finally
         {

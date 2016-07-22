@@ -16,6 +16,7 @@
 
 package net.dv8tion.jda.player.source;
 
+import net.dv8tion.jda.player.MusicPlayer;
 import org.json.JSONException;
 import org.json.JSONObject;
 import sun.misc.IOUtils;
@@ -74,7 +75,7 @@ public class LocalSource implements AudioSource
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            MusicPlayer.LOG.log(e);
         }
         return null;
     }
@@ -97,8 +98,6 @@ public class LocalSource implements AudioSource
             byte[] infoData = IOUtils.readFully(infoProcess.getInputStream(), -1, false);
             if (infoData == null || infoData.length == 0)
                 throw new NullPointerException("The FFprobe process resulted in a null or zero-length INFO!");
-
-            System.out.println(new String(infoData));
 
             JSONObject info = new JSONObject(new String(infoData));
             JSONObject format = info.getJSONObject("format");
@@ -130,15 +129,10 @@ public class LocalSource implements AudioSource
                     : null;
 
         }
-        catch (IOException e)
+        catch (IOException | JSONException e)
         {
             audioInfo.error = e.getMessage();
-            e.printStackTrace();
-        }
-        catch (JSONException e)
-        {
-            audioInfo.error = e.getMessage();
-            e.printStackTrace();
+            MusicPlayer.LOG.log(e);
         }
         return audioInfo;
     }
@@ -156,7 +150,7 @@ public class LocalSource implements AudioSource
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            MusicPlayer.LOG.log(e);
             return null;
         }
     }

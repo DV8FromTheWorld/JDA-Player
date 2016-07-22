@@ -16,6 +16,8 @@
 
 package net.dv8tion.jda.player.source;
 
+import net.dv8tion.jda.player.MusicPlayer;
+
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,11 +49,11 @@ public class RemoteStream extends AudioStream
             ProcessBuilder pBuilder = new ProcessBuilder();
 
             pBuilder.command(ytdlLaunchArgs);
-            System.out.println("Command: " + pBuilder.command());
+            MusicPlayer.LOG.debug("Command: " + pBuilder.command());
             ytdlProcess = pBuilder.start();
 
             pBuilder.command(ffmpegLaunchArgs);
-            System.out.println("Command: " + pBuilder.command());
+            MusicPlayer.LOG.debug("Command: " + pBuilder.command());
             ffmpegProcess = pBuilder.start();
 
             final Process ytdlProcessF = ytdlProcess;
@@ -81,7 +83,7 @@ public class RemoteStream extends AudioStream
                     {
                         //If the pipe being closed caused this problem, it was because it tried to write when it closed.
                         if (!e.getMessage().contains("The pipe has been ended"))
-                            e.printStackTrace();
+                            MusicPlayer.LOG.log(e);
                     }
                     finally
                     {
@@ -113,18 +115,18 @@ public class RemoteStream extends AudioStream
 
                         fromYTDL = ytdlProcessF.getErrorStream();
                         if (fromYTDL == null)
-                            System.out.println("fromYTDL is null");
+                            MusicPlayer.LOG.fatal("RemoteStream: YTDL-ErrGobler: fromYTDL is null");
 
                         byte[] buffer = new byte[1024];
                         int amountRead = -1;
                         while (!isInterrupted() && ((amountRead = fromYTDL.read(buffer)) > -1))
                         {
-                            System.out.println("ERR YTDL: " + new String(Arrays.copyOf(buffer, amountRead)));
+                            MusicPlayer.LOG.warn("ERR YTDL: " + new String(Arrays.copyOf(buffer, amountRead)));
                         }
                     }
                     catch (IOException e)
                     {
-                        e.printStackTrace();
+                        MusicPlayer.LOG.log(e);
                     }
                 }
             };
@@ -140,7 +142,7 @@ public class RemoteStream extends AudioStream
 
                         fromFFmpeg = ffmpegProcessF.getErrorStream();
                         if (fromFFmpeg == null)
-                            System.out.println("fromYTDL is null");
+                            MusicPlayer.LOG.fatal("RemoteStream: FFmpeg-ErrGobler: fromYTDL is null");
 
                         byte[] buffer = new byte[1024];
                         int amountRead = -1;
@@ -159,7 +161,7 @@ public class RemoteStream extends AudioStream
                     }
                     catch (IOException e)
                     {
-                        e.printStackTrace();
+                        MusicPlayer.LOG.log(e);
                     }
                 }
             };
@@ -171,14 +173,14 @@ public class RemoteStream extends AudioStream
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            MusicPlayer.LOG.log(e);
             try
             {
                 close();
             }
             catch (IOException e1)
             {
-                e1.printStackTrace();
+                MusicPlayer.LOG.log(e1);
             }
         }
     }

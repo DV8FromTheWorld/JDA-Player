@@ -16,6 +16,7 @@
 
 package net.dv8tion.jda.player.source;
 
+import net.dv8tion.jda.player.MusicPlayer;
 import org.json.JSONException;
 import org.json.JSONObject;
 import sun.misc.IOUtils;
@@ -165,15 +166,10 @@ public class RemoteSource implements AudioSource
                 }
             }
         }
-        catch (IOException e)
+        catch (IOException | JSONException e)
         {
             audioInfo.error = e.getMessage();
-            e.printStackTrace();
-        }
-        catch (JSONException e)
-        {
-            audioInfo.error = e.getMessage();
-            e.printStackTrace();
+            MusicPlayer.LOG.log(e);
         }
         return audioInfo;
     }
@@ -247,7 +243,7 @@ public class RemoteSource implements AudioSource
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            MusicPlayer.LOG.log(e);
         }
         finally
         {
@@ -257,7 +253,7 @@ public class RemoteSource implements AudioSource
             }
             catch (IOException e)
             {
-                e.printStackTrace();
+                MusicPlayer.LOG.log(e);
             }
 
             try
@@ -266,7 +262,7 @@ public class RemoteSource implements AudioSource
             }
             catch (IOException e)
             {
-                e.printStackTrace();
+                MusicPlayer.LOG.log(e);
             }
         }
         return file;
