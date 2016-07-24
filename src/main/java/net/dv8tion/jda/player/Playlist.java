@@ -22,6 +22,7 @@ import org.json.JSONObject;
 import sun.misc.IOUtils;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 
 public class Playlist
@@ -66,7 +67,36 @@ public class Playlist
         try
         {
             Process infoProcess = new ProcessBuilder().command(infoArgs).start();
+            Thread ytdlErrGobler = new Thread("RemoteStream ytdlErrGobler")
+            {
+                @Override
+                public void run()
+                {
+
+                    try
+                    {
+                        InputStream fromYTDL = infoProcess.getErrorStream();
+                        if (fromYTDL == null) {
+                            System.out.println("fromYTDL is null");
+                            return;
+                        }
+
+                        byte[] buffer = new byte[1024];
+                        int amountRead = -1;
+                        while (!isInterrupted() && ((amountRead = fromYTDL.read(buffer)) > -1))
+                        {
+                            System.out.println("ERR YTDL: " + new String(Arrays.copyOf(buffer, amountRead)));
+                        }
+                    }
+                    catch (IOException e)
+                    {
+                        e.printStackTrace();
+                    }
+                }
+            };
+            ytdlErrGobler.start();
             byte[] infoData = IOUtils.readFully(infoProcess.getInputStream(), -1, false);
+            ytdlErrGobler.interrupt();
             if (infoData == null || infoData.length == 0)
                 throw new NullPointerException("The YT-DL playlist process resulted in a null or zero-length INFO!");
 
