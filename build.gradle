@@ -1,122 +1,226 @@
+/*
+ *     Copyright 2016 Austin Keener
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 //use: gradlew clean build fatJar signArchives install bintrayUpload
 import org.apache.tools.ant.filters.ReplaceTokens
 
-plugins {
-    id "com.jfrog.bintray" version "1.6"
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7'
+        classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.3'
+    }
 }
 
-apply plugin: 'java'
-apply plugin: 'maven'
-apply plugin: 'signing'
-apply plugin: 'eclipse'
+def sharedVersion = new Version(major: 0, minor: 2, revision: 2)
 
-def versionObj = new Version(major: 0, minor: 2, revision: 1)
-group = "net.dv8tion"
-archivesBaseName = "jda-player"
-version = "$versionObj"
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'maven'
+    apply plugin: 'maven-publish'
+    apply plugin: 'com.jfrog.bintray'
+    apply plugin: 'com.github.johnrengelman.shadow'
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+    group = "net.dv8tion"
+    version = "$sharedVersion"
 
-tasks.eclipse.dependsOn(cleanEclipse)
+    repositories {
+        jcenter()
+    }
 
-def filteredSourceDir = file("$buildDir/filtered")
+    jar {
+        from project(':Core').sourceSets.main.output.classesDir
+        from project(':Core').sourceSets.main.output.resourcesDir
+    }
 
-// This is to fix eclipse's stupidity when first setting up the project.
-// It thinks that "filtered" should be a development source folder and cries when it doesn't exist (gradlew clean)
-eclipse {
-    classpath {
-        file {
-            withXml {
-                def sb = it.asString()
-                sb.replace(0, sb.length(), sb.toString().replace("\n\t<classpathentry kind=\"src\" path=\"build/filtered\"/>", ""));
+    javadoc {
+        failOnError = false
+    }
+
+    shadowJar {
+        classifier = "withDepdendencies"
+    }
+
+    task javadocsJar(type: Jar) {
+        classifier = 'javadoc'
+        from file("${buildDir}/docs/javadoc")
+    }
+
+    task javadocs(type: Javadoc) {
+        source = collect {
+            project.sourceSets.main.java
+            rootProject.project(":Core").sourceSets.main.java
+        }
+        classpath = files(collect {
+            project.sourceSets.main.compileClasspath
+            rootProject.project(":Core").sourceSets.main.compileClasspath
+
+        })
+        destinationDir = file("$buildDir/docs/javadoc")
+    }
+
+    task sourcesJar(type: Jar) {
+        classifier = 'source'
+        from project.sourceSets.main.allJava
+        from rootProject.project(":Core").sourceSets.main.allJava
+    }
+
+    bintrayUpload {
+        onlyIf {
+            System.getenv("BUILD_NUMBER") != null &&
+            !getProjectProperty("bintrayUsername").empty &&
+            !getProjectProperty("bintrayApiKey").empty
+        }
+    }
+
+    publishing {
+        publications {
+            BintrayRelease(MavenPublication) {
+                from components.java
+                groupId group
+                artifactId archivesBaseName
+                version version
+                artifact javadocsJar
+                artifact sourcesJar
+
+                //We need to make sure that the Core dependency is not included in the POM.
+                pom.withXml {
+                    //Get all nodes named "dependencies". There will only ever be 1, so grab index 0
+                    Node dependencies = asNode().get("dependencies").get(0);
+
+                    //Iterate over the child nodes in dependencies
+                    for (Iterator<Node> iterator = dependencies.iterator(); iterator.hasNext();)
+                    {
+                        Node dependencyNode = iterator.next();
+
+                        //Iterate over the "attributes" of the dependency. Technically, they are child nodes, not dependencies.
+                        for (Iterator<Node> iterator2 = dependencyNode.iterator(); iterator2.hasNext();)
+                        {
+                            Node attribute = iterator2.next();
+
+                            //If the attribute is of type "artifactId" and it is the Core artifactId "player-core", remove the dependencyNode.
+                            if (attribute.name().toString().contains("artifactId"))
+                            {
+                                if (attribute.value().toString().equals("[player-core]"))
+                                {
+                                    iterator.remove();
+                                    break
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    //Task order for build
+    build.dependsOn clean
+    build.dependsOn jar
+    build.dependsOn javadocsJar
+    build.dependsOn sourcesJar
+    build.dependsOn shadowJar
+
+    javadocsJar.dependsOn javadocs
+
+    jar.mustRunAfter clean
+    javadocsJar.mustRunAfter jar
+    sourcesJar.mustRunAfter javadocsJar
+    shadowJar.mustRunAfter sourcesJar
+}
+
+project(':Core') {
+    archivesBaseName = "player-core"
+
+    dependencies {
+        compile 'org.json:json:20150729'
+    }
+
+    bintrayUpload {
+        onlyIf {
+            false //We don't upload anything to bintray for Core. It is included in the other packages' jars
+        }
+    }
+}
+
+project(':JDA') {
+    archivesBaseName = "jda-player"
+
+    dependencies {
+        compile 'net.dv8tion:JDA:2.2.0_341'
+        compile project(':Core')
+    }
+
+    bintray {
+        user = bintrayUsername
+        key = bintrayApiKey
+        publications = ['BintrayRelease']
+        pkg {
+            repo = 'maven'
+            name = 'JDA-Player'
+            licenses = ['Apache-2.0']
+            vcsUrl = 'https://github.com/DV8FromTheWorld/JDA-Player.git'
+            publish = true
+            version {
+                name = project.version
+                released = new Date()
             }
         }
     }
 }
 
+project(':D4J') {
+    archivesBaseName = "d4j-player"
+    def projectsToExport = [
+            ":Core",
+            ":D4J"
+    ]
 
-sourceSets {
-    // This source set will contain all sources that we filter
-    filtered {
-        java {
-            srcDirs = [
-                    filteredSourceDir,
-                    "src/test/java",
-            ]
+    repositories {
+        maven {
+            url 'https://jitpack.io'
         }
     }
-}
 
-javadoc {
-    failOnError = false
-}
-
-// copy the main sources and filter any '@buildVersion@' occurences.
-task processVersion (type: Copy) {
-    from sourceSets.main.java
-    into filteredSourceDir
-    filter(ReplaceTokens, tokens: [
-            versionMajor: versionObj.major.toString(),
-            versionMinor: versionObj.minor.toString(),
-            versionRevision: versionObj.revision.toString(),
-            versionBuild: versionObj.build.toString()
-    ])
-}
-
-jar {
-    baseName = project.name
-    manifest {
-        attributes 'Implementation-Version': version
-    }
-    include "net/dv8tion/jda/**"
-}
-
-task javadocJar(type: Jar) {
-    classifier = 'javadoc'
-    from javadoc
-}
-
-task sourcesJar(type: Jar) {
-    classifier = 'sources'
-    from sourceSets.filtered.java
-    include "net/dv8tion/jda/**"
-}
-
-// create a single Jar with all dependencies
-task fatJar(type: Jar) {
-    manifest {
-        attributes 'Main-Class': 'net.dv8tion.jda.player.Bot'
-        attributes 'Implementation-Version': version
+    dependencies {
+        compile "com.github.austinv11:Discord4j:2.5.2"
+        compile 'org.json:json:20150729'
+        compile project(':Core')
     }
 
-    baseName = project.name + '-withDependencies'
-    from {
-        configurations.compile.collect {
-            dependency ->
-                if (dependency.directory) { // If it is a folder, just include the folder in its entirety
-                    return dependency
-                } else {    // If it isn't a folder, put it in a zipTree. if it is a zip or jar the contents will be extracted.
-                    return zipTree(dependency)
-                }
+    bintray {
+        user = bintrayUsername
+        key = bintrayApiKey
+        publications = ['BintrayRelease']
+        pkg {
+            repo = 'maven'
+            name = 'D4J-Player'
+            licenses = ['Apache-2.0']
+            vcsUrl = 'https://github.com/DV8FromTheWorld/JDA-Player.git'
+            publish = true
+            version {
+                name = project.version
+                released = new Date()
+            }
         }
     }
-    with jar
-}
-
-artifacts {
-    archives javadocJar, sourcesJar
-}
-
-signing {
-    sign configurations.archives
-}
-repositories {
-    jcenter()
-}
-
-dependencies {
-    compile 'net.dv8tion:JDA:2.2.0_334'
 }
 
 class Version {
@@ -131,40 +235,6 @@ class Version {
     }
 }
 
-bintray {
-
-    user = bintrayUsername
-    key = bintrayApiKey
-    pkg {
-        repo = 'maven'
-        name = 'JDA-Player'
-        licenses = ['Apache-2.0']
-        vcsUrl = 'https://github.com/DV8FromTheWorld/JDA-Player.git'
-        filesSpec {
-            from ('build/libs') {
-                exclude "**withDependencies**"
-            }
-            from 'build/poms'
-            into "${project.group.replace(".", "/")}/${archivesBaseName}/${project.version}"
-
-            rename { String fileName ->
-                fileName.replace("pom-default.xml", "${archivesBaseName}-${project.version}.pom")
-            }
-        }
-        publish = true
-        version {
-            name = project.version
-            released = new Date()
-        }
-    }
-}
-
-bintrayUpload {
-    onlyIf {
-        System.getenv("BUILD_NUMBER")
-    }
-}
-
 String getProjectProperty(String propertyName)
 {
     String property = ""
@@ -174,17 +244,3 @@ String getProjectProperty(String propertyName)
     }
     return property
 }
-
-// tell the compileJava task to compile the filtered source
-compileJava.source = sourceSets.filtered.java
-compileJava.dependsOn processVersion
-
-//use: gradlew clean build fatJar signArchives install bintrayUpload
-
-// If we don't have the username and password for uploading, we probably also
-// can't sign the archives, so skip these tasks.
-signArchives.onlyIf {(!getProjectProperty("signing.keyId").empty
-    && !getProjectProperty("signing.password").empty
-    && !getProjectProperty("signing.secretKeyRingFile").empty) }
-bintrayUpload.onlyIf { (!getProjectProperty("bintrayUsername").empty
-        && !getProjectProperty("bintrayApiKey").empty) }
