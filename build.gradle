@@ -66,7 +66,7 @@ subprojects {
     task javadocs(type: Javadoc) {
         source = collect {
             project.sourceSets.main.java
-            rootProject.project(":Core").sourceSets.main.java
+            file("${rootProject.project(":Core").buildDir}/filteredSrc")
         }
         classpath = files(collect {
             project.sourceSets.main.compileClasspath
@@ -79,7 +79,7 @@ subprojects {
     task sourcesJar(type: Jar) {
         classifier = 'sources'
         from project.sourceSets.main.allJava
-        from rootProject.project(":Core").sourceSets.main.allJava
+        from "${rootProject.project(":Core").buildDir}/filteredSrc"
     }
 
     bintrayUpload {
@@ -152,6 +152,22 @@ project(':Core') {
     dependencies {
         compile 'org.json:json:20150729'
     }
+
+    task sourcesForRelease(type: Copy) {
+        from 'src/main/java'
+        into 'build/filteredSrc'
+        filter(ReplaceTokens, tokens: [
+                versionMajor: sharedVersion.major.toString(),
+                versionMinor: sharedVersion.minor.toString(),
+                versionRevision: sharedVersion.revision.toString(),
+                versionBuild: sharedVersion.build.toString()])
+    }
+
+    compileJava {
+        source = sourcesForRelease.destinationDir
+        classpath = sourceSets.main.compileClasspath
+    }
+    compileJava.dependsOn sourcesForRelease
 
     bintrayUpload {
         onlyIf {
