@@ -80,7 +80,10 @@ public class RemoteStream extends AudioStream
                     catch (IOException e)
                     {
                         //If the pipe being closed caused this problem, it was because it tried to write when it closed.
-                        if (!e.getMessage().contains("The pipe has been ended"))
+                        String msg = e.getMessage().toLowerCase();
+                        if (e.getMessage().contains("The pipe has been ended") || e.getMessage().contains("Broken pipe"))
+                            AbstractMusicPlayer.LOG.trace("RemoteStream encountered an 'error' : " + e.getMessage() + " (not really an error.. probably)");
+                        else
                             AbstractMusicPlayer.LOG.log(e);
                     }
                     finally
