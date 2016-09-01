@@ -25,6 +25,7 @@ import net.dv8tion.jda.player.source.AudioTimestamp;
 
 import java.io.IOException;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Random;
 
 public abstract class AbstractMusicPlayer
@@ -54,6 +55,11 @@ public abstract class AbstractMusicPlayer
     public void removeEventListener(PlayerEventListener listener)
     {
         eventManager.unregister(listener);
+    }
+
+    public List<PlayerEventListener> getListeners()
+    {
+        return eventManager.getListeners();
     }
 
     public void setRepeat(boolean repeat)

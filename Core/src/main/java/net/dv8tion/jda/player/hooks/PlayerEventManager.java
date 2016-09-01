@@ -21,6 +21,7 @@ import net.dv8tion.jda.player.AbstractMusicPlayer;
 import net.dv8tion.jda.player.JDAPlayerInfo;
 import net.dv8tion.jda.player.hooks.events.PlayerEvent;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -56,5 +57,10 @@ public class PlayerEventManager
                 AbstractMusicPlayer.LOG.log(throwable);
             }
         }
+    }
+
+    public List<PlayerEventListener> getListeners()
+    {
+        return Collections.unmodifiableList(listeners);
     }
 }
