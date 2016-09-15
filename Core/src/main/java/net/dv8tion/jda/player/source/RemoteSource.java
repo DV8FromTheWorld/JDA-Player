@@ -35,7 +35,7 @@ public class RemoteSource implements AudioSource
                     "-f", "bestaudio/best", //Format to download. Attempts best audio-only, followed by best video/audio combo
                     "--no-playlist",        //If the provided link is part of a Playlist, only grabs the video, not playlist too.
                     "-4",                   //Forcing Ipv4 for OVH's Ipv6 range is blocked by youtube
-                    "--no-cache-dir",       //We don't want random screaming 
+                    "--no-cache-dir",       //We don't want random screaming
                     "-o", "-"               //Output, output to STDout
             ));
     public static final List<String> FFMPEG_LAUNCH_ARGS =
@@ -90,6 +90,7 @@ public class RemoteSource implements AudioSource
             infoArgs.addAll(YOUTUBE_DL_LAUNCH_ARGS);
 
         infoArgs.add("--ignore-errors");    //Ignore errors, obviously
+        infoArgs.add("--no-warnings");      //Ignore warnings, because they ruin our JSON
         infoArgs.add("-j");                 //Dumps the json about the file into STDout
         infoArgs.add("--skip-download");    //Doesn't actually download the file.
         infoArgs.add("--");                 //Url separator. Deals with YT ids that start with --
