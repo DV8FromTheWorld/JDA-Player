@@ -32,6 +32,7 @@ public class Playlist
                     "./youtube-dl",         //youtube-dl program file
                     "-q",                   //quiet. No standard out.
                     "-j",                   //Print JSON
+                    "-4",                   //For OVH users
                     "--flat-playlist"       //Get ONLY the urls of the playlist if this is a playlist.
             ));
     protected List<AudioSource> sources;
