@@ -93,13 +93,13 @@ public class RemoteStream extends AudioStream
                             if (fromYTDL != null)
                                 fromYTDL.close();
                         }
-                        catch (IOException e) {}
+                        catch (Throwable e) {}
                         try
                         {
                             if (toFFmpeg != null)
                                 toFFmpeg.close();
                         }
-                        catch (IOException e) {}
+                        catch (Throwable e) {}
                     }
                 }
             };
@@ -109,11 +109,9 @@ public class RemoteStream extends AudioStream
                 @Override
                 public void run()
                 {
-
+                    InputStream fromYTDL = null;
                     try
                     {
-                        InputStream fromYTDL = null;
-
                         fromYTDL = ytdlProcessF.getErrorStream();
                         if (fromYTDL == null)
                             AbstractMusicPlayer.LOG.fatal("RemoteStream: YTDL-ErrGobler: fromYTDL is null");
@@ -129,6 +127,15 @@ public class RemoteStream extends AudioStream
                     {
                         AbstractMusicPlayer.LOG.log(e);
                     }
+                    finally
+                    {
+                        try
+                        {
+                            if (fromYTDL != null)
+                                fromYTDL.close();
+                        }
+                        catch (Throwable ignored) {}
+                    }
                 }
             };
 
@@ -137,10 +144,9 @@ public class RemoteStream extends AudioStream
                 @Override
                 public void run()
                 {
+                    InputStream fromFFmpeg = null;
                     try
                     {
-                        InputStream fromFFmpeg = null;
-
                         fromFFmpeg = ffmpegProcessF.getErrorStream();
                         if (fromFFmpeg == null)
                             AbstractMusicPlayer.LOG.fatal("RemoteStream: FFmpeg-ErrGobler: fromYTDL is null");
@@ -163,6 +169,15 @@ public class RemoteStream extends AudioStream
                     catch (IOException e)
                     {
                         AbstractMusicPlayer.LOG.log(e);
+                    }
+                    finally
+                    {
+                        try
+                        {
+                            if (fromFFmpeg != null)
+                                fromFFmpeg.close();
+                        }
+                        catch (Throwable ignored) {}
                     }
                 }
             };
@@ -195,36 +210,64 @@ public class RemoteStream extends AudioStream
     @Override
     public void close() throws IOException
     {
-        if (in != null)
+        try
         {
-            in.close();
-            in = null;
+            if (in != null)
+            {
+                in.close();
+                in = null;
+            }
         }
-        if (ytdlToFFmpegThread != null)
+        catch (Throwable ignored) {}
+        try
         {
-            ytdlToFFmpegThread.interrupt();
-            ytdlToFFmpegThread = null;
+            if (ytdlToFFmpegThread != null)
+            {
+                ytdlToFFmpegThread.interrupt();
+                ytdlToFFmpegThread = null;
+            }
         }
-        if (ytdlErrGobler != null)
+        catch (Throwable ignored) {}
+        try
         {
-            ytdlErrGobler.interrupt();
-            ytdlErrGobler = null;
+            if (ytdlErrGobler != null)
+            {
+                ytdlErrGobler.interrupt();
+                ytdlErrGobler = null;
+            }
         }
-        if (ffmpegErrGobler != null)
+        catch (Throwable ignored) {}
+        try
         {
-            ffmpegErrGobler.interrupt();
-            ffmpegErrGobler = null;
+            if (ffmpegErrGobler != null)
+            {
+                ffmpegErrGobler.interrupt();
+                ffmpegErrGobler = null;
+            }
         }
-        if (ffmpegProcess != null)
+        catch (Throwable ignored) {}
+        try
         {
-            ffmpegProcess.destroy();
-            ffmpegProcess = null;
+            if (ffmpegProcess != null)
+            {
+                ffmpegProcess.destroyForcibly();
+                ffmpegProcess = null;
+            }
         }
-        if (ytdlProcess != null)
+        catch (Throwable ignored) {}
+        try
         {
-            ytdlProcess.destroy();
-            ytdlProcess = null;
+            if (ytdlProcess != null)
+            {
+                ytdlProcess.destroyForcibly();
+                ytdlProcess = null;
+            }
         }
-        super.close();
+        catch (Throwable ignored) {}
+        try
+        {
+            super.close();
+        }
+        catch (Throwable ignored) {}
     }
 }

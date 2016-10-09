@@ -22,6 +22,7 @@ import org.json.JSONObject;
 import sun.misc.IOUtils;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 
 public class Playlist
@@ -64,10 +65,13 @@ public class Playlist
         //Fire up Youtube-dl and get all sources from the provided url.
         List<AudioSource> sources = new ArrayList<>();
         Scanner scan = null;
+        Process infoProcess = null;
+        InputStream infoStream = null;
         try
         {
-            Process infoProcess = new ProcessBuilder().command(infoArgs).start();
-            byte[] infoData = IOUtils.readFully(infoProcess.getInputStream(), -1, false);
+            infoProcess = new ProcessBuilder().command(infoArgs).start();
+            infoStream = infoProcess.getInputStream();
+            byte[] infoData = IOUtils.readFully(infoStream, -1, false);
             if (infoData == null || infoData.length == 0)
                 throw new NullPointerException("The YT-DL playlist process resulted in a null or zero-length INFO!");
 
@@ -95,8 +99,24 @@ public class Playlist
         }
         finally
         {
-            if (scan != null)
-                scan.close();
+            try
+            {
+                if (scan != null)
+                    scan.close();
+            }
+            catch (Throwable ignored) {}
+            try
+            {
+                if (infoProcess != null)
+                    infoProcess.destroyForcibly();
+            }
+            catch (Throwable ignored) {}
+            try
+            {
+                if (infoStream != null)
+                    infoStream.close();
+            }
+            catch (Throwable ignore){}
         }
 
         //Now that we have all the sources we can create our Playlist object.

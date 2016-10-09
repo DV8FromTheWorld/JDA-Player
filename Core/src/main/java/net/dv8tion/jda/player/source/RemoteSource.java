@@ -97,10 +97,15 @@ public class RemoteSource implements AudioSource
         infoArgs.add(url);                  //specifies the URL to download.
 
         audioInfo = new AudioInfo();
+        Process ytdlProcess = null;
+        Process ffprobeProcess = null;
+        InputStream ytdlStream = null;
+        InputStream ffprobeStream = null;
         try
         {
-            Process infoProcess = new ProcessBuilder().command(infoArgs).start();
-            byte[] infoData = IOUtils.readFully(infoProcess.getErrorStream(), -1, false);   //YT-DL outputs to STDerr
+            ytdlProcess = new ProcessBuilder().command(infoArgs).start();
+            ytdlStream = ytdlProcess.getErrorStream();
+            byte[] infoData = IOUtils.readFully(ytdlStream, -1, false);   //YT-DL outputs to STDerr
             if (infoData == null || infoData.length == 0)
                 throw new NullPointerException("The Youtube-DL process resulted in a null or zero-length INFO!");
 
@@ -154,8 +159,9 @@ public class RemoteSource implements AudioSource
                     ffprobeInfoArgs.add("-i");
                     ffprobeInfoArgs.add(info.optString("url", url));
 
-                    infoProcess = new ProcessBuilder().command(ffprobeInfoArgs).start();
-                    infoData = IOUtils.readFully(infoProcess.getInputStream(), -1, false);
+                    ffprobeProcess = new ProcessBuilder().command(ffprobeInfoArgs).start();
+                    ffprobeStream = ffprobeProcess.getInputStream();
+                    infoData = IOUtils.readFully(ffprobeStream, -1, false);
                     if (infoData != null && infoData.length > 0)
                     {
                         info = new JSONObject(new String(infoData)).getJSONObject("format");
@@ -173,6 +179,33 @@ public class RemoteSource implements AudioSource
         {
             audioInfo.error = e.getMessage();
             AbstractMusicPlayer.LOG.log(e);
+        }
+        finally
+        {
+            try
+            {
+                if (ytdlProcess != null)
+                    ytdlProcess.destroyForcibly();
+            }
+            catch (Throwable ignored) {}
+            try
+            {
+                if (ytdlStream != null)
+                    ytdlStream.close();
+            }
+            catch (Throwable ignored) {}
+            try
+            {
+                if (ffprobeProcess != null)
+                    ffprobeProcess.destroyForcibly();
+            }
+            catch (Throwable ignored) {}
+            try
+            {
+                if (ffprobeStream != null)
+                    ffprobeStream.close();;
+            }
+            catch (Throwable ignored) {}
         }
         return audioInfo;
     }

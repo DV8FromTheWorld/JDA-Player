@@ -47,10 +47,9 @@ public class LocalStream extends AudioStream
                 @Override
                 public void run()
                 {
+                    InputStream fromFFmpeg = null;
                     try
                     {
-                        InputStream fromFFmpeg = null;
-
                         fromFFmpeg = ffmpegProcessF.getErrorStream();
                         if (fromFFmpeg == null)
                             AbstractMusicPlayer.LOG.fatal("LocalStream: ErrGobler: fromFFmpeg is null");
@@ -73,6 +72,15 @@ public class LocalStream extends AudioStream
                     catch (IOException e)
                     {
                         AbstractMusicPlayer.LOG.log(e);
+                    }
+                    finally
+                    {
+                        try
+                        {
+                            if (fromFFmpeg != null)
+                                fromFFmpeg.close();
+                        }
+                        catch (Throwable ignored) {}
                     }
                 }
             };
@@ -103,21 +111,37 @@ public class LocalStream extends AudioStream
     @Override
     public void close() throws IOException
     {
-        if (in != null)
+        try
         {
-            in.close();
-            in = null;
+            if (in != null)
+            {
+                in.close();
+                in = null;
+            }
         }
-        if (ffmpegErrGobler != null)
+        catch (Throwable ignored) {}
+        try
         {
-            ffmpegErrGobler.interrupt();
-            ffmpegErrGobler = null;
+            if (ffmpegErrGobler != null)
+            {
+                ffmpegErrGobler.interrupt();
+                ffmpegErrGobler = null;
+            }
         }
-        if (ffmpegProcess != null)
+        catch (Throwable ignored) {}
+        try
         {
-            ffmpegProcess.destroy();
-            ffmpegProcess = null;
+            if (ffmpegProcess != null)
+            {
+                ffmpegProcess.destroyForcibly();
+                ffmpegProcess = null;
+            }
         }
-        super.close();
+        catch (Throwable ignored) {}
+        try
+        {
+            super.close();
+        }
+        catch (Throwable ignored) {}
     }
 }

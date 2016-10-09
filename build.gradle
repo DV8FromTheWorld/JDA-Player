@@ -27,7 +27,7 @@ buildscript {
     }
 }
 
-def sharedVersion = new Version(major: 0, minor: 2, revision: 2)
+def sharedVersion = new Version(major: 0, minor: 2, revision: 3)
 
 subprojects {
     apply plugin: 'java'

@@ -60,7 +60,7 @@ public class MusicPlayer extends AbstractMusicPlayer implements AudioSendHandler
                 if (volume != 1) {
                     short sample;
                     for (int i = 0; i < buffer.length; i+=2) {
-                        sample = (short)((buffer[ i+ 1] & 0xff) | (buffer[i] << 8));
+                        sample = (short)((buffer[i + 1] & 0xff) | (buffer[i] << 8));
                         sample = (short) (sample * volume);
                         buffer[i + 1] = (byte)(sample & 0xff);
                         buffer[i] = (byte)((sample >> 8) & 0xff);
@@ -76,7 +76,7 @@ public class MusicPlayer extends AbstractMusicPlayer implements AudioSendHandler
         }
         catch (IOException e)
         {
-            LOG.warn("A source closed unexpectantly? Oh well I guess...");
+            LOG.debug("A source closed unexpectantly? Oh well I guess...");
             sourceFinished();
         }
         return null;

@@ -24,6 +24,7 @@ import sun.misc.IOUtils;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.FileAlreadyExistsException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -87,6 +88,8 @@ public class LocalSource implements AudioSource
             return audioInfo;
 
         audioInfo = new AudioInfo();
+        Process ffprobeProcess = null;
+        InputStream ffprobeStream = null;
         try
         {
             List<String> infoArgs = new LinkedList<>();
@@ -94,8 +97,9 @@ public class LocalSource implements AudioSource
             infoArgs.add("-i");
             infoArgs.add(file.getCanonicalPath());
 
-            Process infoProcess = new ProcessBuilder().command(infoArgs).start();
-            byte[] infoData = IOUtils.readFully(infoProcess.getInputStream(), -1, false);
+            ffprobeProcess = new ProcessBuilder().command(infoArgs).start();
+            ffprobeStream = ffprobeProcess.getInputStream();
+            byte[] infoData = IOUtils.readFully(ffprobeStream, -1, false);
             if (infoData == null || infoData.length == 0)
                 throw new NullPointerException("The FFprobe process resulted in a null or zero-length INFO!");
 
@@ -133,6 +137,21 @@ public class LocalSource implements AudioSource
         {
             audioInfo.error = e.getMessage();
             AbstractMusicPlayer.LOG.log(e);
+        }
+        finally
+        {
+            try
+            {
+                if (ffprobeProcess != null)
+                    ffprobeProcess.destroyForcibly();
+            }
+            catch (Throwable ignored) {}
+            try
+            {
+                if (ffprobeStream != null)
+                    ffprobeStream.close();
+            }
+            catch (Throwable ignored) {}
         }
         return audioInfo;
     }
