@@ -177,6 +177,8 @@ public abstract class AbstractMusicPlayer
         if (currentAudioSource != null)
         {
             state = State.PLAYING;
+            if (fireEvent)
+                eventManager.handle(new PlayEvent(this));
             return;
         }
 
