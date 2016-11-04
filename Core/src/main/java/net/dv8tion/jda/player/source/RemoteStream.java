@@ -18,6 +18,7 @@ package net.dv8tion.jda.player.source;
 
 import net.dv8tion.jda.player.AbstractMusicPlayer;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -40,12 +41,19 @@ public class RemoteStream extends AudioStream
     private List<String> ffmpegLaunchArgs;
     private AudioTimestamp timestamp = AudioTimestamp.fromSeconds(0);
 
-    protected RemoteStream(List<String> ytdlLaunchArgs, List<String> ffmpegLaunchArgs)
+    protected RemoteStream(List<String> ytdlLaunchArgs, List<String> ffmpegLaunchArgs, String guildId)
     {
         try
         {
+            File directory = new File("cache/" + guildId);
+            if(!directory.exists()) {
+                directory.mkdirs();
+            } else {
+                directory.delete();
+                directory.mkdirs();
+            }
             ProcessBuilder pBuilder = new ProcessBuilder();
-
+            pBuilder.directory(directory);
             pBuilder.command(ytdlLaunchArgs);
             AbstractMusicPlayer.LOG.debug("Command: " + pBuilder.command());
             ytdlProcess = pBuilder.start();

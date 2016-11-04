@@ -34,8 +34,10 @@ public class RemoteSource implements AudioSource
                     "-q",                   //quiet. No standard out.
                     "-f", "bestaudio/best", //Format to download. Attempts best audio-only, followed by best video/audio combo
                     "--no-playlist",        //If the provided link is part of a Playlist, only grabs the video, not playlist too.
-                    "-4",                   //Forcing Ipv4 for OVH's Ipv6 range is blocked by youtube
                     "--no-cache-dir",       //We don't want random screaming
+                    "--no-part",            //No --Frag files
+                    "--no-warning",         //Fuck you Annoying JSON error
+                    "-4",                   //Forcing Ipv4 for OVH's Ipv6 range is blocked by youtube
                     "-o", "-"               //Output, output to STDout
             ));
     public static final List<String> FFMPEG_LAUNCH_ARGS =
@@ -53,19 +55,21 @@ public class RemoteSource implements AudioSource
     private final List<String> ytdlLaunchArgsF;
     private final List<String> ffmpegLaunchArgsF;
     private AudioInfo audioInfo;
+    private String guildId;
 
-    public RemoteSource(String url)
+    public RemoteSource(String url, String guildId)
     {
-        this(url, null, null);
+        this(url, null, null, guildId);
     }
 
-    public RemoteSource(String url, List<String> ytdlLaunchArgs, List<String> ffmpegLaunchArgs)
+    public RemoteSource(String url, List<String> ytdlLaunchArgs, List<String> ffmpegLaunchArgs, String guildId)
     {
         if (url == null || url.isEmpty())
             throw new NullPointerException("String url provided to RemoteSource was null or empty.");
         this.url = url;
         this.ytdlLaunchArgsF = ytdlLaunchArgs;
         this.ffmpegLaunchArgsF = ffmpegLaunchArgs;
+        this.guildId = guildId;
     }
 
     public String getSource()
@@ -232,7 +236,7 @@ public class RemoteSource implements AudioSource
         ytdlLaunchArgs.add("--");   //Url separator. Deals with YT ids that start with --
         ytdlLaunchArgs.add(url);    //specifies the URL to download.
 
-        return new RemoteStream(ytdlLaunchArgs, ffmpegLaunchArgs);
+        return new RemoteStream(ytdlLaunchArgs, ffmpegLaunchArgs, this.guildId);
     }
 
     @Override
