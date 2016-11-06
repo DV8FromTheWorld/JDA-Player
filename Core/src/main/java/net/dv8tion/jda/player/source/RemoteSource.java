@@ -35,8 +35,8 @@ public class RemoteSource implements AudioSource
                     "-f", "bestaudio/best", //Format to download. Attempts best audio-only, followed by best video/audio combo
                     "--no-playlist",        //If the provided link is part of a Playlist, only grabs the video, not playlist too.
                     "--no-cache-dir",       //We don't want random screaming
-                    "--no-part",            //No --Frag files
-                    "--no-warning",         //Fuck you Annoying JSON error
+                    "--no-part",            //No --Frag files (At least reduces it)
+                    "--no-warning",         //Disable Warnings to prevent JSONException
                     "-4",                   //Forcing Ipv4 for OVH's Ipv6 range is blocked by youtube
                     "-o", "-"               //Output, output to STDout
             ));
