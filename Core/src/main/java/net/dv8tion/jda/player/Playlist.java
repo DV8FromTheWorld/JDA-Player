@@ -43,11 +43,13 @@ public class Playlist
     protected boolean repeatSingle = false;
     protected boolean repeatList = false;
     protected boolean shuffle = false;
+    private String guildId;
 
-    public Playlist(String name)
+    public Playlist(String name, String guildId)
     {
         this.name = name;
         this.sources = new ArrayList<>();
+        this.guildId = guildId;
     }
 
     public List<AudioSource> getSources()
@@ -55,7 +57,7 @@ public class Playlist
         return Collections.unmodifiableList(sources);
     }
 
-    public static Playlist getPlaylist(String url)
+    public static Playlist getPlaylist(String url, String guildId)
     {
         List<String> infoArgs = new LinkedList<>();
         infoArgs.addAll(YOUTUBE_DL_PLAYLIST_ARGS);
@@ -81,16 +83,16 @@ public class Playlist
             JSONObject source = new JSONObject(scan.nextLine());
             if (source.has("_type"))//Is a playlist
             {
-                sources.add(new RemoteSource(source.getString("url")));
+                sources.add(new RemoteSource(source.getString("url"), guildId));
                 while (scan.hasNextLine())
                 {
                     source = new JSONObject(scan.nextLine());
-                    sources.add(new RemoteSource(source.getString("url")));
+                    sources.add(new RemoteSource(source.getString("url"), guildId));
                 }
             }
             else                    //Single source link
             {
-                sources.add(new RemoteSource(source.getString("webpage_url")));
+                sources.add(new RemoteSource(source.getString("webpage_url"), guildId));
             }
         }
         catch (IOException e)
@@ -120,7 +122,7 @@ public class Playlist
         }
 
         //Now that we have all the sources we can create our Playlist object.
-        Playlist playlist = new Playlist("New Playlist");
+        Playlist playlist = new Playlist("New Playlist", guildId);
         playlist.sources = sources;
         return playlist;
     }

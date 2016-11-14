@@ -26,7 +26,6 @@ import sx.blah.discord.api.ClientBuilder;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.audio.IAudioManager;
-import sx.blah.discord.handle.audio.impl.AudioManager;
 import sx.blah.discord.handle.audio.impl.DefaultProvider;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.IMessage;
@@ -316,7 +315,7 @@ public class Bot
             {
                 String infoMsg = "";
                 String url = message.substring("play ".length());
-                Playlist playlist = Playlist.getPlaylist(url);
+                Playlist playlist = Playlist.getPlaylist(url, event.getMessage().getGuild().getID());
                 List<AudioSource> sources = new LinkedList(playlist.getSources());
 //                AudioSource source = new RemoteSource(url);
 //                AudioSource source = new LocalSource(new File(url));
