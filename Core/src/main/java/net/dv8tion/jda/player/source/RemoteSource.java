@@ -31,6 +31,7 @@ public class RemoteSource implements AudioSource
             Collections.unmodifiableList(Arrays.asList(
                     "python",               //Launch python executor
                     "./youtube-dl",         //youtube-dl program file
+                    "--no-part",            //Do not use .part files (--Frag?)
                     "-q",                   //quiet. No standard out.
                     "-f", "bestaudio/best", //Format to download. Attempts best audio-only, followed by best video/audio combo
                     "--no-playlist",        //If the provided link is part of a Playlist, only grabs the video, not playlist too.
