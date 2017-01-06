@@ -30,7 +30,7 @@ public class Playlist
     public static final List<String> YOUTUBE_DL_PLAYLIST_ARGS =
             Collections.unmodifiableList(Arrays.asList(
                     "python",               //Launch python executor
-                    "./youtube-dl",         //youtube-dl program file
+                    "youtube-dl",         //youtube-dl program file
                     "-q",                   //quiet. No standard out.
                     "-j",                   //Print JSON
                     "-4",                   //For OVH users
